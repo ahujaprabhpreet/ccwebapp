@@ -10,9 +10,12 @@
 
 ## Technology Stack
 
+Framework : Spring Boot
 Database : PostgreSQL
+Version Control : Git
 
 ## Build Instructions
+
 
 
 ## Deploy Instructions
