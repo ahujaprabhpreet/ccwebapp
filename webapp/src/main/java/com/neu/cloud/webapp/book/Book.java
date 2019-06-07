@@ -29,6 +29,14 @@ public class Book {
     public Book() {
     }
 
+    public Book(UUID uuid, String title, String author, String isbn, Integer quantity ) {
+        this.uuid = uuid;
+        this.title = title;
+        this.author = author;
+        this.isbn = isbn;
+        this.quantity = quantity;
+    }
+
     public UUID getUuid() {
         return uuid;
     }

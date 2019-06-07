@@ -16,6 +16,9 @@ public class SpringSecurityBAConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private CustomAuthenticationProvider authProvider;
 
+    //demo
+//    @Autowired
+//    private CustomBasicAuthenticationEntryPoint myBasicAuthenticationEntryPoint;
 
     @Autowired
     public void configAuthentication(AuthenticationManagerBuilder auth) throws Exception {
@@ -24,14 +27,24 @@ public class SpringSecurityBAConfig extends WebSecurityConfigurerAdapter {
 
     protected void configure(HttpSecurity http) throws Exception {
 
+        //webapp wala code
+//        http.
+//                csrf().disable().
+//                authorizeRequests().
+//                antMatchers("/user/register").permitAll().
+//                anyRequest().authenticated().and().
+//                formLogin().disable().
+//                httpBasic().realmName("Realm").authenticationEntryPoint(new CustomBasicAuthenticationEntryPoint()).and()
+//        .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+
+        //demo wala
         http.
                 csrf().disable().
                 authorizeRequests().
                 antMatchers("/user/register").permitAll().
                 anyRequest().authenticated().and().
                 formLogin().disable().
-                httpBasic().realmName("Realm").authenticationEntryPoint(new CustomBasicAuthenticationEntryPoint()).and()
-        .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+                httpBasic().realmName("Realm").authenticationEntryPoint(new CustomBasicAuthenticationEntryPoint());
 
     }
 }

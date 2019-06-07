@@ -42,8 +42,10 @@ public class BookController {
     public ResponseEntity<Book> getBook(@PathVariable String suuid){
 
         UUID uuid = UUID.randomUUID();
+
         if(!checkUuid(suuid))
             return new ResponseEntity(new CustomResponse(new Date(),"ID must be of type UUID","" ),HttpStatus.BAD_REQUEST);
+
         uuid=UUID.fromString(suuid);
         Optional<Book> book=bookRepository.findById(uuid);
 
@@ -79,6 +81,7 @@ public class BookController {
             return new ResponseEntity(new CustomResponse(new Date(),"ID must be of type UUID","" ),HttpStatus.BAD_REQUEST);
 
         uuid=UUID.fromString(suuid);
+
         Optional<Book> fbook=bookRepository.findById(uuid);
 
         if(!fbook.isPresent())
@@ -88,7 +91,6 @@ public class BookController {
                 book.getTitle()==null || book.getIsbn()==null)
             return new ResponseEntity(new CustomResponse(new Date(),"Incorrect Book Details","title, author, isbn, quantity" ), HttpStatus.BAD_REQUEST);
 
-
         book.setUuid(uuid);
         bookRepository.save(book);
         return  ResponseEntity.noContent().build();
@@ -97,8 +99,9 @@ public class BookController {
 
     public boolean checkUuid(String uuid){
         try{
-            UUID nuuid= UUID.fromString(uuid);
-        }catch (Exception ex){
+            UUID nuuid = UUID.fromString(uuid);
+        }
+        catch (Exception ex){
             return false;
         }
         return true;
