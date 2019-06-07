@@ -1,4 +1,4 @@
 package com.neu.cloud.webapp.config;
 
-public class SecurityConfig {
+public class SpringSecurityBAConfig {
 }
