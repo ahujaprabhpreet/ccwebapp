@@ -22,7 +22,7 @@ public class BookController {
 
         if(book.getAuthor()==null || book.getQuantity()==null ||
                 book.getTitle()==null || book.getIsbn()==null)
-            return new ResponseEntity(new CustomResponse(new Date(),"Fields cannot be null","" ), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity(new CustomResponse(new Date(),"Incorrect Book Details","title, author, isbn, quantity" ), HttpStatus.BAD_REQUEST);
 
         bookRepository.save(book);
 
@@ -38,13 +38,17 @@ public class BookController {
 
     }
 
-    @GetMapping("/book/{uuid}")
-    public ResponseEntity<Book> getBook(@PathVariable UUID uuid){
+    @GetMapping("/book/{suuid}")
+    public ResponseEntity<Book> getBook(@PathVariable String suuid){
+
+        UUID uuid = UUID.randomUUID();
+        if(!checkUuid(suuid))
+            return new ResponseEntity(new CustomResponse(new Date(),"ID must be of type UUID","" ),HttpStatus.BAD_REQUEST);
 
         Optional<Book> book=bookRepository.findById(uuid);
 
         if(!book.isPresent())
-            return new ResponseEntity(new CustomResponse(new Date(),"ID not found","" ),HttpStatus.NOT_FOUND);
+            return new ResponseEntity(new CustomResponse(new Date(),"Book not found","" ),HttpStatus.NOT_FOUND);
 
         return  ResponseEntity.ok(book.get());
 
@@ -60,24 +64,29 @@ public class BookController {
         Optional<Book> book=bookRepository.findById(uuid);
 
         if(!book.isPresent())
-            return new ResponseEntity(new CustomResponse(new Date(),"ID not found","" ),HttpStatus.NOT_FOUND);
+            return new ResponseEntity(new CustomResponse(new Date(),"Book not found","" ),HttpStatus.NOT_FOUND);
 
         bookRepository.deleteById(uuid);
         return ResponseEntity.noContent().build();
 
     }
 
-    @PutMapping("/book/{uuid}")
-    public ResponseEntity<Void> updateBook(@RequestBody Book book, @PathVariable UUID uuid){
+    @PutMapping("/book/{suuid}")
+    public ResponseEntity<Void> updateBook(@RequestBody Book book, @PathVariable String suuid){
+
+        UUID uuid = UUID.randomUUID();
+        if(!checkUuid(suuid))
+            return new ResponseEntity(new CustomResponse(new Date(),"ID must be of type UUID","" ),HttpStatus.BAD_REQUEST);
+
 
         Optional<Book> fbook=bookRepository.findById(uuid);
 
         if(!fbook.isPresent())
-            return new ResponseEntity(new CustomResponse(new Date(),"ID not found","" ),HttpStatus.NOT_FOUND);
+            return new ResponseEntity(new CustomResponse(new Date(),"Book not found","" ),HttpStatus.NOT_FOUND);
 
         if(book.getAuthor()==null || book.getQuantity()==null ||
                 book.getTitle()==null || book.getIsbn()==null)
-            return new ResponseEntity(new CustomResponse(new Date(),"Fields cannot be Null","" ),HttpStatus.BAD_REQUEST);
+            return new ResponseEntity(new CustomResponse(new Date(),"Incorrect Book Details","title, author, isbn, quantity" ), HttpStatus.BAD_REQUEST);
 
 
         book.setUuid(uuid);
