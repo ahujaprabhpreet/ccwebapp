@@ -6,12 +6,12 @@ public class CustomResponse {
 
     private Date timestamp;
     private String message;
-    private String Details;
+    private String details;
 
     public CustomResponse(Date timestamp, String message, String details) {
         this.timestamp = timestamp;
         this.message = message;
-        Details = details;
+        this.details = details;
     }
 
     public Date getTimestamp() {
@@ -31,10 +31,10 @@ public class CustomResponse {
     }
 
     public String getDetails() {
-        return Details;
+        return details;
     }
 
     public void setDetails(String details) {
-        Details = details;
+        this.details = details;
     }
 }
