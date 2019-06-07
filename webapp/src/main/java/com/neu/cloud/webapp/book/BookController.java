@@ -44,7 +44,7 @@ public class BookController {
         UUID uuid = UUID.randomUUID();
         if(!checkUuid(suuid))
             return new ResponseEntity(new CustomResponse(new Date(),"ID must be of type UUID","" ),HttpStatus.BAD_REQUEST);
-
+        uuid=UUID.fromString(suuid);
         Optional<Book> book=bookRepository.findById(uuid);
 
         if(!book.isPresent())
@@ -78,7 +78,7 @@ public class BookController {
         if(!checkUuid(suuid))
             return new ResponseEntity(new CustomResponse(new Date(),"ID must be of type UUID","" ),HttpStatus.BAD_REQUEST);
 
-
+        uuid=UUID.fromString(suuid);
         Optional<Book> fbook=bookRepository.findById(uuid);
 
         if(!fbook.isPresent())
