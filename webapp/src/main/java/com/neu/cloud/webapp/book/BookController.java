@@ -47,7 +47,8 @@ public class BookController {
             return new ResponseEntity(new CustomResponse(new Date(),"ID must be of type UUID","" ),HttpStatus.BAD_REQUEST);
 
         uuid=UUID.fromString(suuid);
-        Optional<Book> book=bookRepository.findById(uuid);
+
+        Optional<Book> book= bookRepository.findById(uuid);
 
         if(!book.isPresent())
             return new ResponseEntity(new CustomResponse(new Date(),"Book not found","" ),HttpStatus.NOT_FOUND);
