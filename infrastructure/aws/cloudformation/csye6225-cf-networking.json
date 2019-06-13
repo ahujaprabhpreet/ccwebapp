@@ -3,7 +3,24 @@
   "Description" : "Cloud Formation Template",
 
   "Parameters": {
-
+    "VPCName": {
+      "Type" : "String"
+    },
+    "Subnet1Name": {
+      "Type" : "String"
+    },
+    "Subnet2Name": {
+      "Type" : "String"
+    },
+    "Subnet3Name": {
+      "Type" : "String"
+    },
+    "InternetGatewayName": {
+      "Type" : "String"
+    },
+    "RouteTableName": {
+      "Type" : "String"
+    }
   },
 
   "Resources" : {
@@ -15,7 +32,7 @@
         "EnableDnsSupport" : "true",
         "EnableDnsHostnames" : "true",
         "InstanceTenancy" : "default",
-        "Tags" : [ {"Key" : "foo", "Value" : "bar"} ]
+        "Tags" : [ {"Key" : "Name", "Value" : {"Ref": "VPCName"}} ]
       }
     },
     "mySubnet1" : {
@@ -24,7 +41,7 @@
         "VpcId" : { "Ref" : "myVPC" },
         "CidrBlock" : "10.0.0.0/26",
         "AvailabilityZone" : "us-east-1a",
-        "Tags" : [ { "Key" : "foo", "Value" : "bar" } ]
+        "Tags" : [ {"Key" : "Name", "Value" : {"Ref": "Subnet1Name"}}  ]
       }
     },
     "mySubnet2" : {
@@ -33,7 +50,7 @@
         "VpcId" : { "Ref" : "myVPC" },
         "CidrBlock" : "10.0.0.64/26",
         "AvailabilityZone" : "us-east-1b",
-        "Tags" : [ { "Key" : "foo", "Value" : "bar" } ]
+        "Tags" : [ {"Key" : "Name", "Value" : {"Ref": "Subnet2Name"}} ]
       }
     },
     "mySubnet3" : {
@@ -42,13 +59,13 @@
         "VpcId" : { "Ref" : "myVPC" },
         "CidrBlock" : "10.0.0.128/26",
         "AvailabilityZone" : "us-east-1c",
-        "Tags" : [ { "Key" : "foo", "Value" : "bar" } ]
+        "Tags" : [ {"Key" : "Name", "Value" : {"Ref": "Subnet3Name"}} ]
       }
     },
     "myInternetGateway" : {
       "Type" : "AWS::EC2::InternetGateway",
       "Properties" : {
-        "Tags" : [ {"Key" : "foo", "Value" : "bar"}]
+        "Tags" : [ {"Key" : "Name", "Value" : {"Ref": "InternetGatewayName"}}]
       }
     },
     "AttachGateway" : {
@@ -62,7 +79,7 @@
       "Type" : "AWS::EC2::RouteTable",
       "Properties" : {
         "VpcId" : { "Ref" : "myVPC" },
-        "Tags" : [ { "Key" : "foo", "Value" : "bar" } ]
+        "Tags" : [ {"Key" : "Name", "Value" : {"Ref": "RouteTableName"}} ]
       }
     },
     "mySubnetRouteTableAssociation1" : {
