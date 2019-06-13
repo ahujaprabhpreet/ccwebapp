@@ -1,50 +1,109 @@
 {
-  "AWSTemplateFormatVersion": "2010-09-10",
-  "Description": "Launch EC2 - CSYE 6225 Summer 2019",
-  "Resources": {
-    "myVPC": {
-      "Type": "AWS::EC2::VPC",
-      "Properties": {
-        "CidrBlock": "10.0.0.0/16",
-        "EnableDnsSupport": "true",
-        "EnableDnsHostnames": "true",
-        "InstanceTenancy": "default",
-        "Tags": [
-          {
-            "Key": "foo",
-            "Value": "bar"
-          }
-        ]
-      }
-    }
+
+  "Description" : "Cloud Formation Template",
+
+  "Parameters": {
+
   },
-  "Outputs": {
-    "CidrBlock": {
-      "Description": "The set of IP addresses for the VPC.",
-      "Value": {
-        "Fn::GetAtt": [
-          "myVPC",
-          "CidrBlock"
-        ]
+
+  "Resources" : {
+
+    "myVPC" : {
+      "Type" : "AWS::EC2::VPC",
+      "Properties" : {
+        "CidrBlock" : "10.0.0.0/16",
+        "EnableDnsSupport" : "true",
+        "EnableDnsHostnames" : "true",
+        "InstanceTenancy" : "default",
+        "Tags" : [ {"Key" : "foo", "Value" : "bar"} ]
       }
     },
-    "DefaultNetworkAcl": {
-      "Description": "The default network ACL ID that is associated with the VPC. ",
-      "Value": {
-        "Fn::GetAtt": [
-          "myVPC",
-          "DefaultNetworkAcl"
-        ]
+    "mySubnet1" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "myVPC" },
+        "CidrBlock" : "10.0.0.0/26",
+        "AvailabilityZone" : "us-east-1a",
+        "Tags" : [ { "Key" : "foo", "Value" : "bar" } ]
       }
     },
-    "DefaultSecurityGroup": {
-      "Description": "The default security group ID that is associated with the VPC.",
-      "Value": {
-        "Fn::GetAtt": [
-          "myVPC",
-          "DefaultSecurityGroup"
-        ]
+    "mySubnet2" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "myVPC" },
+        "CidrBlock" : "10.0.0.64/26",
+        "AvailabilityZone" : "us-east-1b",
+        "Tags" : [ { "Key" : "foo", "Value" : "bar" } ]
+      }
+    },
+    "mySubnet3" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "myVPC" },
+        "CidrBlock" : "10.0.0.128/26",
+        "AvailabilityZone" : "us-east-1c",
+        "Tags" : [ { "Key" : "foo", "Value" : "bar" } ]
+      }
+    },
+    "myInternetGateway" : {
+      "Type" : "AWS::EC2::InternetGateway",
+      "Properties" : {
+        "Tags" : [ {"Key" : "foo", "Value" : "bar"}]
+      }
+    },
+    "AttachGateway" : {
+      "Type" : "AWS::EC2::VPCGatewayAttachment",
+      "Properties" : {
+        "VpcId" : { "Ref" : "myVPC" },
+        "InternetGatewayId" : { "Ref" : "myInternetGateway" }
+      }
+    },
+    "myRouteTable" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+        "VpcId" : { "Ref" : "myVPC" },
+        "Tags" : [ { "Key" : "foo", "Value" : "bar" } ]
+      }
+    },
+    "mySubnetRouteTableAssociation1" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "mySubnet1" },
+        "RouteTableId" : { "Ref" : "myRouteTable" }
+      }
+    },
+    "mySubnetRouteTableAssociation2" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "mySubnet2" },
+        "RouteTableId" : { "Ref" : "myRouteTable" }
+      }
+    },
+    "mySubnetRouteTableAssociation3" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "mySubnet3" },
+        "RouteTableId" : { "Ref" : "myRouteTable" }
+      }
+    },
+    "myRoute" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "myRouteTable" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "GatewayId" : { "Ref" : "myInternetGateway" }
       }
     }
-  }
+
+
+  },
+
+  "Outputs" : {
+
+
+  },
+
+  "AWSTemplateFormatVersion" : "2010-09-09"
+
 }
+
