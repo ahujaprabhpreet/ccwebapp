@@ -3,13 +3,13 @@
 echo 'AWS Virtual Private Cloud Setup Initiated...'
 
 # reading parameters from the user
-echo -n 'VPC Name'
+echo -n 'VPC Name: '
 read VPC_NAME
-echo -n 'Subnet 1'
+echo -n 'Subnet 1: '
 read SUBNET_NAME_1
-echo -n 'Subnet 2'
+echo -n 'Subnet 2: '
 read SUBNET_NAME_2
-echo -n 'Subnet 3'
+echo -n 'Subnet 3: '
 read SUBNET_NAME_3
 
 # defining the CIDR block
@@ -36,8 +36,8 @@ echo "	VPC ID '$VPC' "
 
 # Naming the VPC
 echo "Naming the created VPC..."
-aws ec2 create-tags \ 
-	--resources $VPC \
+aws ec2 create-tags \
+ --resources $VPC \
 	--tags "Key=Name, Value=$VPC_NAME-csye6225-vpc"
 echo " VPC ID '$VPC' NAMED as $VPC_NAME-csye6225-vpc.  "
 
@@ -161,18 +161,6 @@ aws ec2 create-tags \
 echo "  Subnet ID '$ROUTE_TABLE' NAMED as" \
   "$VPC_NAME-csye6225-rt."
 
-## Create route to Internet Gateway
-#RESULT=$(aws ec2 create-route \
-#    --route-table-id $ROUTE_TABLE \
-#    --destination-cidr-block 0.0.0.0/0 \
-#    --gateway-id $IGW )
-#if [[ "$RESULT" == "" ]]; then
-#	echo "[error] Route creation to Internet Gateway failed!" 1>&2
-#	exit 1
-#fi
-#echo "  Route to '0.0.0.0/0' via Internet Gateway ID '$IGW' ADDED to" \
-#  "Route Table ID '$ROUTE_TABLE'."
-
 # Associate Subnet 1 with Route Table
 RESULT_1=$(aws ec2 associate-route-table  \
     --subnet-id $SUBNET_ID1 \
@@ -206,16 +194,16 @@ fi
 echo "Subnet ID '$SUBNET_ID3' ASSOCIATED with Route Table ID" \
   "'$ROUTE_TABLE'."
 
-#group_id=$(aws ec2 describe-security-groups --filters Name=vpc-id,Values=${VPC})
-#if [[ "$group_id" == "" ]]; then
-#	echo "[error] Can't find security group" 1>&2
-#	exit 1
-#fi
-#
-#s_gid=$(echo -e "$group_id" | jq '.SecurityGroups[0].GroupId' | tr -d '"')
-#if [[ "$s_gid" == "" ]]; then
-#	echo "[error] Can't find security group id" 1>&2
-#	exit 1
-#fi
+# Create route to Internet Gateway
+RESULT=$(aws ec2 create-route \
+    --route-table-id $ROUTE_TABLE \
+    --destination-cidr-block 0.0.0.0/0 \
+    --gateway-id $IGW )
+if [[ "$RESULT" == "" ]]; then
+	echo "[error] Route creation to Internet Gateway failed!" 1>&2
+	exit 1
+fi
+echo "  Route to '0.0.0.0/0' via Internet Gateway ID '$IGW' ADDED to" \
+  "Route Table ID '$ROUTE_TABLE'."
 
 
