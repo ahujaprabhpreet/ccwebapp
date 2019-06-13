@@ -1,13 +1,16 @@
 package com.neu.cloud.webapp.book;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import com.neu.cloud.webapp.filestorage.Image;
+import lombok.Getter;
+import lombok.Setter;
+
+import javax.persistence.*;
 import java.util.UUID;
 
 @Entity
 @Table(name="Books")
+@Getter
+@Setter
 public class Book {
 
     @Id
@@ -26,6 +29,10 @@ public class Book {
     @Column(name="Quantity")
     private Integer quantity;
 
+    @OneToOne( cascade  = CascadeType.ALL)
+    @JoinColumn(name="BookImageID" , referencedColumnName = "ImageID")
+    private Image image;
+
     public Book() {
     }
 
@@ -37,43 +44,4 @@ public class Book {
         this.quantity = quantity;
     }
 
-    public UUID getUuid() {
-        return uuid;
-    }
-
-    public void setUuid(UUID uuid) {
-        this.uuid = uuid;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getAuthor() {
-        return author;
-    }
-
-    public void setAuthor(String author) {
-        this.author = author;
-    }
-
-    public String getIsbn() {
-        return isbn;
-    }
-
-    public void setIsbn(String isbn) {
-        this.isbn = isbn;
-    }
-
-    public Integer getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(Integer quantity) {
-        this.quantity = quantity;
-    }
 }
