@@ -1,0 +1,50 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-10",
+  "Description": "Launch EC2 - CSYE 6225 Summer 2019",
+  "Resources": {
+    "myVPC": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": "10.0.0.0/16",
+        "EnableDnsSupport": "true",
+        "EnableDnsHostnames": "true",
+        "InstanceTenancy": "default",
+        "Tags": [
+          {
+            "Key": "foo",
+            "Value": "bar"
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "CidrBlock": {
+      "Description": "The set of IP addresses for the VPC.",
+      "Value": {
+        "Fn::GetAtt": [
+          "myVPC",
+          "CidrBlock"
+        ]
+      }
+    },
+    "DefaultNetworkAcl": {
+      "Description": "The default network ACL ID that is associated with the VPC. ",
+      "Value": {
+        "Fn::GetAtt": [
+          "myVPC",
+          "DefaultNetworkAcl"
+        ]
+      }
+    },
+    "DefaultSecurityGroup": {
+      "Description": "The default security group ID that is associated with the VPC.",
+      "Value": {
+        "Fn::GetAtt": [
+          "myVPC",
+          "DefaultSecurityGroup"
+        ]
+      }
+    }
+  }
+}
