@@ -1,6 +1,6 @@
 #! /bin/bash
 
-echo "plz enter stack name"
+echo "Please enter the Stack name :"
 read STACK_NAME
 
 
@@ -17,9 +17,9 @@ if [ $? -eq 0 ]; then
 
 
      if [ $? -eq 0 ]; then
-     echo "deleted succesfully"
+     echo "Stack Deleted Succesfully"
      else
-     echo "unsucessfull"
+     echo "Unsucessfull"
      fi
 
 else
