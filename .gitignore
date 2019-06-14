@@ -133,3 +133,7 @@ HELP.md
 ### VS Code ###
 .vscode/
 
+###images ###
+*.jpeg
+*.png
+*.jpg
