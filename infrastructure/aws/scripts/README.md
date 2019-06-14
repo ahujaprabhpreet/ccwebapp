@@ -8,7 +8,7 @@ csye6225-aws-networking-termination.sh : This is a bash script to delete the VPC
 
 
 ## Command to create stack 
-Enter this command 
+Enter this command: <br>
 ./csye6225-aws-networking-setup.sh : This command asks for VPC names and subnet names from the users and helps in configuring the cloud using bash script 
 
 From the command prompt enter the name of the VPC, if the name exists it gives a proper response message. add the subnet names as well.
@@ -17,5 +17,5 @@ From the command prompt enter the name of the VPC, if the name exists it gives a
 Enter this command: <br> 
 ./csye6225-aws-networking-termination.sh: This command deletes the cloud stack 
 
-From the command promt enter name of the stack to delete.
+From the command promt enter name of the stack to delete. <br>
 Please enter vpc name : my-vpc
