@@ -34,7 +34,6 @@ public class ImageController {
 
         if(book.getImage() != null) return new ResponseEntity(new CustomResponse(new Date(),"Image already Exists!",""),HttpStatus.CONFLICT);
         imageService.addCover(book, file);
-
         return ResponseEntity.ok().body(book.getImage());
     }
 
