@@ -10,7 +10,7 @@ if [ $? -eq 0 ]; then
 
     #deleting stack
     aws cloudformation delete-stack --stack-name $STACK_NAME
-    echo "terminating stack"
+
 
     #waiting stack to complete
     aws cloudformation wait stack-delete-complete --stack-name $STACK_NAME
