@@ -1,19 +1,37 @@
 #! /bin/bash
 
-VPCName=$STACK_NAME-"VPC"
-Subnet1Name=$STACK_NAME-"Subnet1"
-Subnet2Name=$STACK_NAME-"Subnet2"
-Subnet3Name=$STACK_NAME-"Subnet3"
-InternetGatewayName=$STACK_NAME-"InternetGateway"
-RouteTableName=$STACK_NAME-"RouteTable"
+echo "please enter stack name"
+read STACK_NAME
 
+#checking stack exit or not
+statuscheck=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].StackStatus" >/dev/null 2>&1)
+if [ $? -ne 0 ]; then
 
-aws cloudformation create-stack --stack-name $STACK_NAME --template-body file:///home/puneet/csye6225/ccwebapp/infrastructure/aws/cloudformation/csye6225-cf-networking.json --parameters ParameterKey=VPCName,ParameterValue=$VPCName ParameterKey=Subnet1Name,ParameterValue=$Subnet1Name ParameterKey=Subnet2Name,ParameterValue=$Subnet2Name ParameterKey=Subnet3Name,ParameterValue=$Subnet3Name ParameterKey=InternetGatewayName,ParameterValue=$InternetGatewayName ParameterKey=RouteTableName,ParameterValue=$RouteTableName
+    #creating variables
+    VPCName=$STACK_NAME-"VPC"
+    Subnet1Name=$STACK_NAME-"Subnet1"
+    Subnet2Name=$STACK_NAME-"Subnet2"
+    Subnet3Name=$STACK_NAME-"Subnet3"
+    InternetGatewayName=$STACK_NAME-"InternetGateway"
+    RouteTableName=$STACK_NAME-"RouteTable"
 
-aws cloudformation wait stack-create-complete --stack-name $STACK_NAME
+    #creating stack from template
+    aws cloudformation create-stack --stack-name $STACK_NAME --template-body file:///home/puneet/csye6225/ccwebapp/infrastructure/aws/cloudformation/csye6225-cf-networking.json --parameters ParameterKey=VPCName,ParameterValue=$VPCName ParameterKey=Subnet1Name,ParameterValue=$Subnet1Name ParameterKey=Subnet2Name,ParameterValue=$Subnet2Name ParameterKey=Subnet3Name,ParameterValue=$Subnet3Name ParameterKey=InternetGatewayName,ParameterValue=$InternetGatewayName ParameterKey=RouteTableName,ParameterValue=$RouteTableName
+    echo "creating stack"
 
-if [ $? -eq 0 ]; then
-echo "stack created successfully"
+    #wating stack to create
+    aws cloudformation wait stack-create-complete --stack-name $STACK_NAME
+
+    if [ $? -eq 0 ]; then
+    echo "stack created successfully"
+    else
+    echo "stack not created"
+    fi
+
 else
-echo "stack not created"
+echo "stack already exist"
 fi
+
+
+
+
