@@ -21,8 +21,9 @@ if [ $? -ne 0 ]; then
 
 
     #creating stack from template
-    aws cloudformation create-stack --stack-name $STACK_NAME --template-body file://csye6225-cf-networking.json --parameters ParameterKey=VPCName,ParameterValue=$VPCName ParameterKey=Subnet1Name,ParameterValue=$Subnet1Name ParameterKey=Subnet2Name,ParameterValue=$Subnet2Name ParameterKey=Subnet3Name,ParameterValue=$Subnet3Name ParameterKey=InternetGatewayName,ParameterValue=$InternetGatewayName ParameterKey=RouteTableName,ParameterValue=$RouteTableName ParameterKey=CidrVPC,ParameterValue=$CidrVPC ParameterKey=CidrSubnet1,ParameterValue=$CidrSubnet1 ParameterKey=CidrSubnet2,ParameterValue=$CidrSubnet2 ParameterKey=CidrSubnet3,ParameterValue=$CidrSubnet3
 
+    aws cloudformation create-stack --stack-name $STACK_NAME --template-body file://csye6225-cf-networking.json --parameters ParameterKey=VPCName,ParameterValue=$VPCName ParameterKey=Subnet1Name,ParameterValue=$Subnet1Name ParameterKey=Subnet2Name,ParameterValue=$Subnet2Name ParameterKey=Subnet3Name,ParameterValue=$Subnet3Name ParameterKey=InternetGatewayName,ParameterValue=$InternetGatewayName ParameterKey=RouteTableName,ParameterValue=$RouteTableName
+    echo "creating stack"
 
     #wating stack to create
     aws cloudformation wait stack-create-complete --stack-name $STACK_NAME

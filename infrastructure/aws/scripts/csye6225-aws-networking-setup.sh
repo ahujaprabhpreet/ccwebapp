@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
 echo 'AWS Virtual Private Cloud Setup Initiated...'
 
