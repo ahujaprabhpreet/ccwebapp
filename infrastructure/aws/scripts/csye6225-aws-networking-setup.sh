@@ -28,6 +28,7 @@ VPC=$(aws ec2 create-vpc \
 	--query 'Vpc.{VpcId:VpcId}'\
 	--output text )
 
+# checking if the VPC is created
 if [[ "$VPC" ==  "" ]]; then
 	echo "[error] VPC creation failed!" 1>&2
 	exit 1
@@ -37,21 +38,31 @@ echo "	VPC ID '$VPC' "
 # Naming the VPC
 echo "Naming the created VPC..."
 aws ec2 create-tags \
- --resources $VPC \
+    --resources $VPC \
 	--tags "Key=Name, Value=$VPC_NAME-csye6225-vpc"
 echo " VPC ID '$VPC' NAMED as $VPC_NAME-csye6225-vpc.  "
 
-#add dns support
-modify_response=$(aws ec2 modify-vpc-attribute \
+# adding dns support to the VPC
+dns_sup=$(aws ec2 modify-vpc-attribute \
     --vpc-id "$VPC" \
     --enable-dns-support "{\"Value\":true}")
 
-#add dns hostnames
-modify_response=$(aws ec2 modify-vpc-attribute \
+# checking if the DNS support is added
+if [[ "$dns_sup" ==  "" ]]; then
+	echo "DNS Support to VPC added successfully!" 1>&2
+fi
+
+# adding dns hostnames
+dns_name=$(aws ec2 modify-vpc-attribute \
     --vpc-id "$VPC" \
     --enable-dns-hostnames "{\"Value\":true}")
 
-# Creating Public Subnet 1
+# checking if the DNS hosts are is named
+if [[ "$dns_name" ==  "" ]]; then
+	echo "DNS host naming successful!" 1>&2
+fi
+
+# creating Public Subnet 1
 echo "Creating Subnet 1..."
 SUBNET_ID1=$(aws ec2 create-subnet \
 	--vpc-id $VPC \
@@ -59,6 +70,8 @@ SUBNET_ID1=$(aws ec2 create-subnet \
     --availability-zone $SUBNET_ZONE1 \
     --query 'Subnet.{SubnetId:SubnetId}' \
     --output text )
+
+# checking if Subnet 1 is created
 if [[ "$SUBNET_ID1" == "" ]]; then
 	echo "[error] Subnet 1 creation failed!" 1>&2
 	exit 1
@@ -81,6 +94,8 @@ SUBNET_ID2=$(aws ec2 create-subnet \
     --availability-zone $SUBNET_ZONE2 \
     --query 'Subnet.{SubnetId:SubnetId}' \
     --output text )
+
+# checking if Subnet 2 is created
 if [[ "$SUBNET_ID2" == "" ]]; then
 	echo "[error] Subnet 2 creation failed!" 1>&2
 	exit 1
@@ -103,6 +118,8 @@ SUBNET_ID3=$(aws ec2 create-subnet \
     --availability-zone ${SUBNET_ZONE3} \
     --query 'Subnet.{SubnetId:SubnetId}' \
     --output text )
+
+# checking if Subnet 3 is created
 if [[ "$SUBNET_ID3" == "" ]]; then
 	echo "[error] Subnet 3 creation failed!" 1>&2
 	exit 1
@@ -123,6 +140,8 @@ echo "Creating Internet Gateway..."
 IGW=$(aws ec2 create-internet-gateway \
     --query 'InternetGateway.{InternetGatewayId:InternetGatewayId}' \
     --output text )
+
+# checking if internet gateway is created
 if [[ "$IGW" == "" ]]; then
 	echo "[error] Internet Gateway creation failed!" 1>&2
 	exit 1
@@ -148,6 +167,8 @@ ROUTE_TABLE=$(aws ec2 create-route-table \
     --vpc-id $VPC \
     --query 'RouteTable.{RouteTableId:RouteTableId}' \
     --output text )
+
+# checking route table is created is not
 if [[ "$ROUTE_TABLE" == "" ]]; then
 	echo "[error] Route Table creation failed!" 1>&2
 	exit 1
@@ -162,10 +183,12 @@ echo "  Subnet ID '$ROUTE_TABLE' NAMED as" \
   "$VPC_NAME-csye6225-rt."
 
 # Associate Subnet 1 with Route Table
-RESULT_1=$(aws ec2 associate-route-table  \
+ROUTE_1=$(aws ec2 associate-route-table  \
     --subnet-id $SUBNET_ID1 \
     --route-table-id $ROUTE_TABLE )
-if [[ "$RESULT_1" == "" ]]; then
+
+# checking if route 1 is created
+if [[ "$ROUTE_1" == "" ]]; then
 	echo "[error] Subnet1 association with Route Table failed!" 1>&2
 	exit 1
 fi
@@ -173,10 +196,12 @@ echo "Subnet ID '$SUBNET_ID1' ASSOCIATED with Route Table ID" \
   "'$ROUTE_TABLE'."
 
 # Associate Subnet 2 with Route Table
-RESULT_2=$(aws ec2 associate-route-table  \
+ROUTE_2=$(aws ec2 associate-route-table  \
     --subnet-id $SUBNET_ID2 \
     --route-table-id $ROUTE_TABLE )
- if [[ "$RESULT_2" == "" ]]; then
+
+# checking if route 2 is created
+if [[ "$ROUTE_2" == "" ]]; then
 	echo "[error] Subnet2 association with Route Table failed!" 1>&2
 	exit 1
 fi
@@ -184,10 +209,12 @@ echo "Subnet ID '$SUBNET_ID2' ASSOCIATED with Route Table ID" \
   "'$ROUTE_TABLE'."
 
 # Associate Subnet 3 with Route Table
-RESULT_3=$(aws ec2 associate-route-table  \
+ROUTE_3=$(aws ec2 associate-route-table  \
     --subnet-id $SUBNET_ID3 \
     --route-table-id $ROUTE_TABLE )
-if [[ "$RESULT_3" == "" ]]; then
+
+# checking if route 3 is created
+if [[ "$ROUTE_3" == "" ]]; then
 	echo "[error] Subnet3 association with Route Table failed!" 1>&2
 	exit 1
 fi
@@ -199,6 +226,8 @@ RESULT=$(aws ec2 create-route \
     --route-table-id $ROUTE_TABLE \
     --destination-cidr-block 0.0.0.0/0 \
     --gateway-id $IGW )
+
+# checking internet gateway
 if [[ "$RESULT" == "" ]]; then
 	echo "[error] Route creation to Internet Gateway failed!" 1>&2
 	exit 1
