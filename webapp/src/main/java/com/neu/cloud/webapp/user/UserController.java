@@ -27,7 +27,8 @@ public class UserController {
     @GetMapping("/")
     public ResponseEntity<Void> beginApp(){
 
-        return new ResponseEntity(new CustomResponse(new Date(),"","" ),HttpStatus.OK);
+        LocalTime localTime= LocalTime.now();
+        return new ResponseEntity(new CustomResponse(new Date(), localTime.toString() ,"" ),HttpStatus.OK);
 
     }
 
