@@ -25,9 +25,10 @@ public class UserController {
     private PasswordEncoder passwordEncoder;
 
     @GetMapping("/")
-    public String beginApp(){
-        LocalTime localTime= LocalTime.now();
-        return localTime.toString();
+    public ResponseEntity<Void> beginApp(){
+
+        return new ResponseEntity(new CustomResponse(new Date(),"","" ),HttpStatus.OK);
+
     }
 
     @PostMapping("/user/register")
