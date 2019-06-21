@@ -34,9 +34,10 @@ public class ImageService {
     public String copyImageToFolder(UUID idBook, MultipartFile file) throws Exception {
        // String path = "/Users/prabhpreetsingh/uploads/" + idBook + "_" + file.getOriginalFilename();
         String name=idBook + "_" + file.getOriginalFilename();
-        String path = "/images/" + name;
-        ClassPathResource classPathResource = new ClassPathResource(path);
-        path=classPathResource.getPath();
+//        String path = "/images/" + name;
+//        ClassPathResource classPathResource = new ClassPathResource(path);
+//        path=classPathResource.getPath();
+        String path = System.getProperty("user.home")+ "/images/+" +name;
         File temp = new File(path);
         temp.createNewFile();
         FileOutputStream fOutStream = new FileOutputStream(temp);
@@ -54,16 +55,15 @@ public class ImageService {
 
 
     public void updateImage(Book book, MultipartFile file, Image oldImage) throws Exception {
-        ClassPathResource classPathResource = new ClassPathResource(oldImage.getUrl());
-        deleteExistingFile(classPathResource.getPath());
+//        ClassPathResource classPathResource = new ClassPathResource(oldImage.getUrl());
+        deleteExistingFile(oldImage.getUrl());
         String path = copyImageToFolder(book.getUuid(), file);
         oldImage.setUrl(path);
         imageRepository.save(oldImage);
     }
 
     public void deleteExistingFile(String existingFilePath){
-        ClassPathResource classPathResource = new ClassPathResource(existingFilePath);
-        File existingImage = new File(classPathResource.getPath());
+        File existingImage = new File(existingFilePath);
         existingImage.delete();
     }
 
