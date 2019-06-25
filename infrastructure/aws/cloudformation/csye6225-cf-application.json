@@ -1,5 +1,151 @@
 {
+
+  "Parameters": {
+    "DBPassword": {
+      "Type" : "String"
+    },
+    "DBUser": {
+      "Type" : "String"
+    },
+    "DBName": {
+      "Type" : "String"
+    },
+    "DBInstanceClass": {
+      "Type" : "String"
+    },
+    "DBAllocatedStorage": {
+      "Type" : "String"
+    },
+    "RouteTableName": {
+      "Type" : "String"
+    },
+    "CidrVPC": {
+      "Type" : "String"
+    },
+    "CidrSubnet1": {
+      "Type" : "String"
+    },
+    "CidrSubnet2": {
+      "Type" : "String"
+    },
+    "CidrSubnet3": {
+      "Type" : "String"
+    }
+
+  },
+
+  "AWSTemplateFormatVersion": "2010-09-09",
+
   "Resources": {
 
+    "myDBSubnetGroup": {
+      "Type": "AWS::RDS::DBSubnetGroup",
+      "Properties": {
+        "DBSubnetGroupDescription": "description",
+        "SubnetIds": [
+          "subnet-7b5b4112",
+          "subnet-7b5b4115"
+        ],
+        "Tags": [
+          {
+            "Key": "String",
+            "Value": "String"
+          }
+        ]
+      }
+    },
+
+    "WebSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Allow http to client host",
+        "VpcId" : {"Ref" : "myVPC"},
+        "SecurityGroupIngress" : [
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : 22,
+            "ToPort" : 22,
+            "CidrIp" : "0.0.0.0/0"
+          },
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : 80,
+            "ToPort" : 80,
+            "CidrIp" : "0.0.0.0/0"
+          },
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : 443,
+            "ToPort" : 443,
+            "CidrIp" : "0.0.0.0/0"
+          }
+        ]
+      }
+    },
+
+    "DBSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Allow http to client host",
+        "VpcId" : {"Ref" : "myVPC"},
+        "SecurityGroupIngress" : [{
+          "IpProtocol" : "tcp",
+          "FromPort" : 3306,
+          "ToPort" : 3306,
+          "CidrIp" : {"Ref" : "WebSecurityGroup"}
+        }]
+      }
+    },
+
+    "MyDB": {
+      "Type": "AWS::RDS::DBInstance",
+      "Properties": {
+        "AllocatedStorage": "5",
+        "Engine": "PostgreSQL",
+        "EngineVersion": "10.6-R1",
+        "DBInstanceClass": "db.t2.micro",
+        "MultiAZ": "false",
+        "DBInstanceIdentifier": "csye6225-su19",
+        "MasterUsername": "csye6225master",
+        "MasterUserPassword": "csye6225password",
+        "DBSubnetGroupName": "",
+        "PubliclyAccessible": "true",
+        "DBName": "csye6225",
+        "VPCSecurityGroups": {"Ref": "DBSecurityGroup"},
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "PostgreSQL Database"
+          }
+        ]
+      },
+      "DeletionPolicy": "Snapshot"
+    },
+
+    "MyEC2Instance" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "ImageId" : "ami-79fd7eee",
+        "KeyName" : "testkey",
+        "BlockDeviceMappings" : [
+          {
+            "DeviceName" : "/dev/sdm",
+            "Ebs" : {
+              "VolumeType" : "io1",
+              "Iops" : "200",
+              "DeleteOnTermination" : "false",
+              "VolumeSize" : "20"
+            }
+          },
+          {
+            "DeviceName" : "/dev/sdk",
+            "NoDevice" : {}
+          }
+        ]
+      }
+    }
+
+
   }
+
 }
