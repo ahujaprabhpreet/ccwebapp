@@ -1,17 +1,5 @@
 {
   "Parameters": {
-    "CidrVPC": {
-      "Type" : "String"
-    },
-    "CidrSubnet1": {
-      "Type" : "String"
-    },
-    "CidrSubnet2": {
-      "Type" : "String"
-    },
-    "CidrSubnet3": {
-      "Type" : "String"
-    },
     "AMI_ID": {
       "Type" : "String"
     }
@@ -41,7 +29,7 @@
           "AssociatePublicIpAddress": true,
           "DeviceIndex": "0",
           "GroupSet": [{ "Ref" : "WebSecurityGroup" }],
-          "SubnetId": { "Ref" : "CidrSubnet3" }
+          "SubnetId": [{"Fn::ImportValue" : {"Fn::Sub" : "${NetworkStackNameParameter}-SubnetID3"}}]
         } ]
       }
     },
@@ -51,8 +39,10 @@
       "Properties": {
         "DBSubnetGroupDescription": "description",
         "SubnetIds": [
-          {"Ref" : "CidrSubnet1"},
-          {"Ref" : "CidrSubnet2"}
+
+          [{"Fn::ImportValue" : {"Fn::Sub" : "${NetworkStackNameParameter}-SubnetID1"}}],
+          [{"Fn::ImportValue" : {"Fn::Sub" : "${NetworkStackNameParameter}-SubnetID2"}}]
+
         ],
         "Tags": [
           {
@@ -67,7 +57,9 @@
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
         "GroupDescription" : "Allow http to client host",
-        "VpcId" : {"Ref" : "CidrVPC"},
+
+        "VpcId" : {"Ref" : [{"Fn::ImportValue" : {"Fn::Sub" : "${NetworkStackNameParameter}-VPC"}}]},
+
         "SecurityGroupIngress" : [
           {
             "IpProtocol" : "tcp",
@@ -95,7 +87,7 @@
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
         "GroupDescription" : "Allow http to client host",
-        "VpcId" : {"Ref" : "CidrVPC"},
+        "VpcId" : [{"Fn::ImportValue" : {"Fn::Sub" : "${NetworkStackNameParameter}-VPC"}}],
         "SecurityGroupIngress" : [{
           "IpProtocol" : "tcp",
           "FromPort" : 5432,
@@ -116,8 +108,10 @@
         "DBInstanceIdentifier": "csye6225-su19",
         "MasterUsername": "csye6225master",
         "MasterUserPassword": "csye6225password",
-        "DBSubnetGroupName": "",
+
+        "DBSubnetGroupName": {"Ref": "myDBSubnetGroup"},
         "PubliclyAccessible": true,
+
         "DBName": "csye6225",
         "VPCSecurityGroups": {"Ref": "DBSecurityGroup"},
         "Tags": [
@@ -129,8 +123,5 @@
       },
       "DeletionPolicy": "Snapshot"
     }
-
-
   }
-
 }
