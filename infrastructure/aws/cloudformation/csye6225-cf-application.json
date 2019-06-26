@@ -18,10 +18,10 @@
       "Properties" : {
         "ImageId" : {"Ref" : "AMIID"},
         "InstanceType": "t2.micro",
-        "KeyName" : "centos",
+        "KeyName" : "CentOS",
         "BlockDeviceMappings" : [
           {
-            "DeviceName" : "/dev/sda",
+            "DeviceName" : "/dev/sdm",
             "Ebs" : {
               "VolumeType" : "gp2",
               "DeleteOnTermination" : false,
@@ -31,8 +31,9 @@
         ],
         "NetworkInterfaces": [ {
           "AssociatePublicIpAddress": true,
+          "DeviceIndex": "0",
           "GroupSet": [{ "Ref" : "WebSecurityGroup" }],
-          "SubnetId": [{"Fn::ImportValue" : {"Fn::Sub" : "${NETWORK}-SubnetID3"}}]
+          "SubnetId": {"Fn::ImportValue" : {"Fn::Sub" : "${NETWORK}-SubnetID3"}}
         } ]
       }
     },
@@ -81,12 +82,6 @@
             "FromPort" : 443,
             "ToPort" : 443,
             "CidrIp" : "0.0.0.0/0"
-          },
-          {
-            "IpProtocol": "tcp",
-            "FromPort": 5432,
-            "ToPort": 5432,
-            "CidrIp": "0:0:0:0/0"
           }
         ]
       }
@@ -97,7 +92,12 @@
       "Properties" : {
         "GroupDescription" : "Allow http to client host",
         "VpcId" : {"Fn::ImportValue" : {"Fn::Sub" : "${NETWORK}-VPC"}},
-        "SecurityGroupIngress" : [{"Ref": "WebSecurityGroup"}]
+        "SecurityGroupIngress" : [{
+          "IpProtocol": "tcp",
+          "FromPort": 5432,
+          "ToPort": 5432,
+          "CidrIp": {"Ref": "WebSecurityGroup"}
+        }]
       }
     },
 
