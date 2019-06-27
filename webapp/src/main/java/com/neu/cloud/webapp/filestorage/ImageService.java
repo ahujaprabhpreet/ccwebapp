@@ -4,6 +4,7 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
@@ -38,8 +39,12 @@ public class ImageService {
 //            .withCredentials(new ProfileCredentialsProvider())
 //            .withRegion("us-east-1").build();
 
+//    private static final AmazonS3 s3 = AmazonS3ClientBuilder.standard()
+//            .withCredentials(DefaultAWSCredentialsProviderChain.getInstance())
+//            .build();
+
     private static final AmazonS3 s3 = AmazonS3ClientBuilder.standard()
-            .withCredentials(DefaultAWSCredentialsProviderChain.getInstance())
+            .withCredentials(new InstanceProfileCredentialsProvider(false))
             .build();
 
     private String path = "";
