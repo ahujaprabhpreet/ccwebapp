@@ -3,6 +3,7 @@ package com.neu.cloud.webapp.filestorage;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.SdkClientException;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
@@ -33,9 +34,13 @@ public class ImageService {
     @Autowired
     private Environment environment;
 
+//    private static final AmazonS3 s3 = AmazonS3ClientBuilder.standard()
+//            .withCredentials(new ProfileCredentialsProvider())
+//            .withRegion("us-east-1").build();
+
     private static final AmazonS3 s3 = AmazonS3ClientBuilder.standard()
-            .withCredentials(new ProfileCredentialsProvider())
-            .withRegion("us-east-1").build();
+            .withCredentials(DefaultAWSCredentialsProviderChain.getInstance())
+            .build();
 
     private String path = "";
     private Bucket bucket = s3.listBuckets().get(0);
