@@ -24,7 +24,7 @@
             "DeviceName" : "/dev/sdm",
             "Ebs" : {
               "VolumeType" : "gp2",
-              "DeleteOnTermination" : false,
+              "DeleteOnTermination" : true,
               "VolumeSize" : "20"
             }
           }
@@ -135,7 +135,7 @@
           }
         ]
       },
-      "DeletionPolicy": "Snapshot"
+      "DeletionPolicy": "Delete"
     },
 
     "DynamoDB" : {

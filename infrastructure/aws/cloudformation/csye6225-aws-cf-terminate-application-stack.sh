@@ -14,18 +14,18 @@ if [[ $? -eq 0 ]]; then
     # deleting stack
     aws cloudformation delete-stack --stack-name $STACK_NAME
     if [[ $? -eq 0 ]]; then
-        echo "VPC stack deletion in progress..."
+        echo "Application Resources stack deletion in progress..."
     else
-        echo "VPC stack deletion terminated due to errors!"
+        echo "Application Resources stack deletion terminated due to errors!"
         exit 1
     fi
 
     # waiting stack to complete
     aws cloudformation wait stack-delete-complete --stack-name $STACK_NAME
     if [[ $? -eq 0 ]]; then
-        echo "VPC Stack deleted successfully"
+        echo "Application Resources Stack deleted successfully"
     else
-        echo "VPC stack deletion unsuccessfull!"
+        echo "Application Resources stack deletion unsuccessfull!"
     fi
 
 else
