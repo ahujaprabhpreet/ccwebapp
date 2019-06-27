@@ -22,6 +22,11 @@ public class Image {
     public Image() {
     }
 
+    public Image(UUID id, String url) {
+        this.id = id;
+        this.url = url;
+    }
+
     public Image(String url) {
         this.url = url;
     }

@@ -44,7 +44,7 @@ public class ImageController {
         if(book == null) return new ResponseEntity(new CustomResponse(new Date(),"Book Not Found",""),HttpStatus.NOT_FOUND);
 
 
-        Image bookImage = imageService.getImageById(idImage);
+        Image bookImage = imageService.getPresignedUrl(idImage);
         if(bookImage == null) return new ResponseEntity(new CustomResponse(new Date(),"Image Not Found",""),HttpStatus.NOT_FOUND);
 
         return ResponseEntity.ok().body(bookImage);
