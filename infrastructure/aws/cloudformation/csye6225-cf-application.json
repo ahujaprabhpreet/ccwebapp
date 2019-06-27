@@ -1,7 +1,10 @@
 {
   "Parameters": {
-    "AMI_ID": {
+    "AMIID": {
       "Type" : "String"
+    },
+    "NETWORK": {
+      "Type": "String"
     }
 
   },
@@ -13,11 +16,12 @@
     "EC2Instance" : {
       "Type" : "AWS::EC2::Instance",
       "Properties" : {
-        "ImageId" : {"Ref" : "AMI_ID"},
+        "ImageId" : {"Ref" : "AMIID"},
+        "InstanceType": "t2.micro",
         "KeyName" : "centos",
         "BlockDeviceMappings" : [
           {
-            "DeviceName" : "/dev/sda",
+            "DeviceName" : "/dev/sdm",
             "Ebs" : {
               "VolumeType" : "gp2",
               "DeleteOnTermination" : false,
@@ -29,7 +33,7 @@
           "AssociatePublicIpAddress": true,
           "DeviceIndex": "0",
           "GroupSet": [{ "Ref" : "WebSecurityGroup" }],
-          "SubnetId": [{"Fn::ImportValue" : {"Fn::Sub" : "${NetworkStackNameParameter}-SubnetID3"}}]
+          "SubnetId": {"Fn::ImportValue" : {"Fn::Sub" : "${NETWORK}-SubnetID3"}}
         } ]
       }
     },
@@ -40,8 +44,8 @@
         "DBSubnetGroupDescription": "description",
         "SubnetIds": [
 
-          [{"Fn::ImportValue" : {"Fn::Sub" : "${NetworkStackNameParameter}-SubnetID1"}}],
-          [{"Fn::ImportValue" : {"Fn::Sub" : "${NetworkStackNameParameter}-SubnetID2"}}]
+          {"Fn::ImportValue" : {"Fn::Sub" : "${NETWORK}-SubnetID1"}},
+          {"Fn::ImportValue" : {"Fn::Sub" : "${NETWORK}-SubnetID2"}}
 
         ],
         "Tags": [
@@ -57,8 +61,7 @@
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
         "GroupDescription" : "Allow http to client host",
-
-        "VpcId" : {"Ref" : [{"Fn::ImportValue" : {"Fn::Sub" : "${NetworkStackNameParameter}-VPC"}}]},
+        "VpcId" : {"Fn::ImportValue" : {"Fn::Sub" : "${NETWORK}-VPC"}},
 
         "SecurityGroupIngress" : [
           {
@@ -87,33 +90,44 @@
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
         "GroupDescription" : "Allow http to client host",
-        "VpcId" : [{"Fn::ImportValue" : {"Fn::Sub" : "${NetworkStackNameParameter}-VPC"}}],
-        "SecurityGroupIngress" : [{
-          "IpProtocol" : "tcp",
-          "FromPort" : 5432,
-          "ToPort" : 5432,
-          "CidrIp" : {"Ref" : "WebSecurityGroup"}
-        }]
+        "VpcId" : {"Fn::ImportValue" : {"Fn::Sub" : "${NETWORK}-VPC"}}
+      }
+    },
+
+
+    "DBSecurityGroupIngress": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "DBSecurityGroup"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": 5432,
+        "ToPort": 5432,
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "WebSecurityGroup",
+            "GroupId"
+          ]
+        }
       }
     },
 
     "PostGresDB": {
       "Type": "AWS::RDS::DBInstance",
       "Properties": {
-        "AllocatedStorage": "5",
-        "Engine": "PostgreSQL",
-        "EngineVersion": "10.6-R1",
+        "AllocatedStorage": "20",
+        "Engine": "postgres",
+        "EngineVersion": "10.6",
         "DBInstanceClass": "db.t2.micro",
         "MultiAZ": false,
         "DBInstanceIdentifier": "csye6225-su19",
         "MasterUsername": "csye6225master",
         "MasterUserPassword": "csye6225password",
-
         "DBSubnetGroupName": {"Ref": "myDBSubnetGroup"},
         "PubliclyAccessible": true,
-
         "DBName": "csye6225",
-        "VPCSecurityGroups": {"Ref": "DBSecurityGroup"},
+        "VPCSecurityGroups": [{"Ref": "DBSecurityGroup"}],
         "Tags": [
           {
             "Key": "Name",
@@ -123,5 +137,7 @@
       },
       "DeletionPolicy": "Snapshot"
     }
+
+
   }
 }
