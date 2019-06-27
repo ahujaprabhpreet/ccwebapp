@@ -18,7 +18,7 @@
       "Properties" : {
         "ImageId" : {"Ref" : "AMIID"},
         "InstanceType": "t2.micro",
-        "KeyName" : "CentOS",
+        "KeyName" : "centos",
         "BlockDeviceMappings" : [
           {
             "DeviceName" : "/dev/sdm",
@@ -61,7 +61,6 @@
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
         "GroupDescription" : "Allow http to client host",
-
         "VpcId" : {"Fn::ImportValue" : {"Fn::Sub" : "${NETWORK}-VPC"}},
 
         "SecurityGroupIngress" : [
@@ -91,33 +90,44 @@
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
         "GroupDescription" : "Allow http to client host",
-        "VpcId" : {"Fn::ImportValue" : {"Fn::Sub" : "${NETWORK}-VPC"}},
-        "SecurityGroupIngress" : [{
-          "IpProtocol": "tcp",
-          "FromPort": 5432,
-          "ToPort": 5432,
-          "CidrIp": {"Ref": "WebSecurityGroup"}
-        }]
+        "VpcId" : {"Fn::ImportValue" : {"Fn::Sub" : "${NETWORK}-VPC"}}
+      }
+    },
+
+
+    "DBSecurityGroupIngress": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "DBSecurityGroup"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": 5432,
+        "ToPort": 5432,
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "WebSecurityGroup",
+            "GroupId"
+          ]
+        }
       }
     },
 
     "PostGresDB": {
       "Type": "AWS::RDS::DBInstance",
       "Properties": {
-        "AllocatedStorage": "5",
-        "Engine": "PostgreSQL",
-        "EngineVersion": "10.6-R1",
+        "AllocatedStorage": "20",
+        "Engine": "postgres",
+        "EngineVersion": "10.6",
         "DBInstanceClass": "db.t2.micro",
         "MultiAZ": false,
         "DBInstanceIdentifier": "csye6225-su19",
         "MasterUsername": "csye6225master",
         "MasterUserPassword": "csye6225password",
-
         "DBSubnetGroupName": {"Ref": "myDBSubnetGroup"},
         "PubliclyAccessible": true,
-
         "DBName": "csye6225",
-        "VPCSecurityGroups": {"Ref": "DBSecurityGroup"},
+        "VPCSecurityGroups": [{"Ref": "DBSecurityGroup"}],
         "Tags": [
           {
             "Key": "Name",
@@ -127,5 +137,7 @@
       },
       "DeletionPolicy": "Snapshot"
     }
+
+
   }
 }
