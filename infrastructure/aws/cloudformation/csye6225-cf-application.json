@@ -24,7 +24,7 @@
             "DeviceName" : "/dev/sdm",
             "Ebs" : {
               "VolumeType" : "gp2",
-              "DeleteOnTermination" : false,
+              "DeleteOnTermination" : true,
               "VolumeSize" : "20"
             }
           }
@@ -135,7 +135,29 @@
           }
         ]
       },
-      "DeletionPolicy": "Snapshot"
+      "DeletionPolicy": "Delete"
+    },
+
+    "DynamoDB" : {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "csye6225",
+        "AttributeDefinitions" : [
+          {
+            "AttributeName" : "id",
+            "AttributeType" : "S"
+          }],
+        "KeySchema" : [
+          {
+            "AttributeName" : "id",
+            "KeyType" : "HASH"
+          }
+        ],
+        "ProvisionedThroughput" : {
+          "ReadCapacityUnits" : "5",
+          "WriteCapacityUnits" : "5"
+        }
+      }
     }
 
 
