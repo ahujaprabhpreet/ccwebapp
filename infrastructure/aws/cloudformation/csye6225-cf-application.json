@@ -30,7 +30,7 @@
         "IamInstanceProfile" : {"Ref" : "IAMProfile"},
         "BlockDeviceMappings" : [
           {
-            "DeviceName" : "/dev/sdm",
+            "DeviceName" : "/dev/sda1",
             "Ebs" : {
               "VolumeType" : "gp2",
               "DeleteOnTermination" : true,

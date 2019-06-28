@@ -21,7 +21,7 @@ if [[ $? -eq 0 ]]; then
         --stack-name $APP_STACK_NAME \
         --template-body file://csye6225-cf-application.json \
         --parameters ParameterKey=AMIID,ParameterValue=$AMIID \
-        ParameterKey=NETWORK,ParameterValue=$NETWORK  --capabilities CAPABILITY_NAMED_IAM --on-failure DELETE 
+        ParameterKey=NETWORK,ParameterValue=$NETWORK  --capabilities CAPABILITY_NAMED_IAM 
 
     # check if the
     if [[ $? -ne 0 ]]; then
