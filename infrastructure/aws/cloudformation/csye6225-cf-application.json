@@ -30,7 +30,7 @@
         "IamInstanceProfile" : {"Ref" : "IAMProfile"},
         "BlockDeviceMappings" : [
           {
-            "DeviceName" : "/dev/sdm",
+            "DeviceName" : "/dev/sda1",
             "Ebs" : {
               "VolumeType" : "gp2",
               "DeleteOnTermination" : true,
@@ -59,7 +59,7 @@
         ],
         "Tags": [
           {
-            "Key": "String",
+            "Key": "Name",
             "Value": "String"
           }
         ]
@@ -97,30 +97,23 @@
 
     "DBSecurityGroup" : {
       "Type" : "AWS::EC2::SecurityGroup",
+      "DeletionPolicy" : "Delete",
       "Properties" : {
         "GroupDescription" : "Allow http to client host",
-        "VpcId" : {"Fn::ImportValue" : {"Fn::Sub" : "${NETWORK}-VPC"}}
+        "VpcId" : {"Fn::ImportValue" : {"Fn::Sub" : "${NETWORK}-VPC"}},
+        "SecurityGroupIngress" : [
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : 5432,
+            "ToPort" : 5432,
+            "SourceSecurityGroupId" : {
+              "Ref" : "WebSecurityGroup"
+            }
+          }
+        ]
       }
     },
 
-
-    "DBSecurityGroupIngress": {
-      "Type": "AWS::EC2::SecurityGroupIngress",
-      "Properties": {
-        "GroupId": {
-          "Ref": "DBSecurityGroup"
-        },
-        "IpProtocol": "tcp",
-        "FromPort": 5432,
-        "ToPort": 5432,
-        "SourceSecurityGroupId": {
-          "Fn::GetAtt": [
-            "WebSecurityGroup",
-            "GroupId"
-          ]
-        }
-      }
-    },
 
     "PostGresDB": {
       "Type": "AWS::RDS::DBInstance",
@@ -142,7 +135,11 @@
             "Key": "Name",
             "Value": "PostgreSQL Database"
           }
-        ]
+        ],
+        "Port" : 5432,
+        "AvailabilityZone" : {
+          "Fn::Select" : [1, { "Fn::GetAZs" :  { "Ref" :  "AWS::Region" }}]
+        }
       },
       "DeletionPolicy": "Delete"
     },
