@@ -132,6 +132,8 @@
                 <filtering>true</filtering>
             </resource>
         </resources>
+
+        <finalName>webapp</finalName>
     </build>
 
 </project>
