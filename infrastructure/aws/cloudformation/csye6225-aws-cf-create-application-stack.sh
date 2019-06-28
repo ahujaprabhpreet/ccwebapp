@@ -1,7 +1,7 @@
 #! /bin/bash
 
 # create the VPC from here
-./csye6225-aws-cf-create-stack.sh
+# ./csye6225-aws-cf-create-stack.sh
 
 # check if the earlier code ran successfully.
 if [[ $? -eq 0 ]]; then
@@ -21,8 +21,7 @@ if [[ $? -eq 0 ]]; then
         --stack-name $APP_STACK_NAME \
         --template-body file://csye6225-cf-application.json \
         --parameters ParameterKey=AMIID,ParameterValue=$AMIID \
-        ParameterKey=NETWORK,ParameterValue=$NETWORK
-
+        ParameterKey=NETWORK,ParameterValue=$NETWORK  --capabilities CAPABILITY_NAMED_IAM --on-failure DELETE 
 
     # check if the
     if [[ $? -ne 0 ]]; then

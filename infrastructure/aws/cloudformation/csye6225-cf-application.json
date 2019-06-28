@@ -13,12 +13,21 @@
 
   "Resources": {
 
+    "IAMProfile": {
+      "Type" : "AWS::IAM::InstanceProfile",
+      "Properties" : {
+          "InstanceProfileName" : "csye6225s3",
+          "Roles" : [ "csye6225s3client"]
+        }
+    },
+
     "EC2Instance" : {
       "Type" : "AWS::EC2::Instance",
       "Properties" : {
         "ImageId" : {"Ref" : "AMIID"},
         "InstanceType": "t2.micro",
         "KeyName" : "centos",
+        "IamInstanceProfile" : {"Ref" : "IAMProfile"},
         "BlockDeviceMappings" : [
           {
             "DeviceName" : "/dev/sdm",
