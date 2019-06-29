@@ -18,10 +18,10 @@ if [[ $? -eq 0 ]]; then
 
     # create application resources stack
     aws cloudformation create-stack \
-        --stack-name $APP_STACK_NAME \
+        --stack-name ${APP_STACK_NAME} \
         --template-body file://csye6225-cf-application.json \
         --parameters ParameterKey=AMIID,ParameterValue=$AMIID \
-        ParameterKey=NETWORK,ParameterValue=$NETWORK  --capabilities CAPABILITY_NAMED_IAM 
+        ParameterKey=NETWORK,ParameterValue=$NETWORK  --capabilities CAPABILITY_NAMED_IAM
 
     # check if the
     if [[ $? -ne 0 ]]; then

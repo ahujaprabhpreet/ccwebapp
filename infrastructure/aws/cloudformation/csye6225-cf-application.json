@@ -1,127 +1,152 @@
 {
   "Parameters": {
     "AMIID": {
-      "Type" : "String"
+      "Type": "String"
     },
     "NETWORK": {
       "Type": "String"
     }
-
   },
-
   "AWSTemplateFormatVersion": "2010-09-09",
-
   "Resources": {
-
     "IAMProfile": {
-      "Type" : "AWS::IAM::InstanceProfile",
-      "Properties" : {
-          "InstanceProfileName" : "csye6225s3",
-          "Roles" : [ "csye6225s3client"]
-        }
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "InstanceProfileName": "csye6225s3",
+        "Roles": [
+          "csye6225s3client"
+        ]
+      }
     },
-
-    "EC2Instance" : {
-      "Type" : "AWS::EC2::Instance",
-      "Properties" : {
-        "ImageId" : {"Ref" : "AMIID"},
+    "EC2Instance": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": {
+          "Ref": "AMIID"
+        },
         "InstanceType": "t2.micro",
-        "KeyName" : "centos",
-        "IamInstanceProfile" : {"Ref" : "IAMProfile"},
-        "BlockDeviceMappings" : [
+        "KeyName": "centos",
+        "IamInstanceProfile": {
+          "Ref": "IAMProfile"
+        },
+        "BlockDeviceMappings": [
           {
-            "DeviceName" : "/dev/sda1",
-            "Ebs" : {
-              "VolumeType" : "gp2",
-              "DeleteOnTermination" : true,
-              "VolumeSize" : "20"
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "VolumeType": "gp2",
+              "DeleteOnTermination": true,
+              "VolumeSize": "20"
             }
           }
         ],
-        "NetworkInterfaces": [ {
-          "AssociatePublicIpAddress": true,
-          "DeviceIndex": "0",
-          "GroupSet": [{ "Ref" : "WebSecurityGroup" }],
-          "SubnetId": {"Fn::ImportValue" : {"Fn::Sub" : "${NETWORK}-SubnetID3"}}
-        } ]
+        "NetworkInterfaces": [
+          {
+            "AssociatePublicIpAddress": true,
+            "DeviceIndex": "0",
+            "GroupSet": [
+              {
+                "Ref": "WebSecurityGroup"
+              }
+            ],
+            "SubnetId": {
+              "Fn::ImportValue": {
+                "Fn::Sub": "${NETWORK}-SubnetID3"
+              }
+            }
+          }
+        ]
       }
     },
-
     "myDBSubnetGroup": {
       "Type": "AWS::RDS::DBSubnetGroup",
       "Properties": {
         "DBSubnetGroupDescription": "description",
         "SubnetIds": [
-
-          {"Fn::ImportValue" : {"Fn::Sub" : "${NETWORK}-SubnetID1"}},
-          {"Fn::ImportValue" : {"Fn::Sub" : "${NETWORK}-SubnetID2"}}
-
+          {
+            "Fn::ImportValue": {
+              "Fn::Sub": "${NETWORK}-SubnetID1"
+            }
+          },
+          {
+            "Fn::ImportValue": {
+              "Fn::Sub": "${NETWORK}-SubnetID2"
+            }
+          }
         ],
         "Tags": [
           {
-            "Key": "String",
+            "Key": "Name",
             "Value": "String"
           }
         ]
       }
     },
-
-    "WebSecurityGroup" : {
-      "Type" : "AWS::EC2::SecurityGroup",
-      "Properties" : {
-        "GroupDescription" : "Allow http to client host",
-        "VpcId" : {"Fn::ImportValue" : {"Fn::Sub" : "${NETWORK}-VPC"}},
-
-        "SecurityGroupIngress" : [
+    "WebSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Allow http to client host",
+        "VpcId": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${NETWORK}-VPC"
+          }
+        },
+        "SecurityGroupIngress": [
           {
-            "IpProtocol" : "tcp",
-            "FromPort" : 22,
-            "ToPort" : 22,
-            "CidrIp" : "0.0.0.0/0"
+            "IpProtocol": "tcp",
+            "FromPort": 22,
+            "ToPort": 22,
+            "CidrIp": "0.0.0.0/0"
           },
           {
-            "IpProtocol" : "tcp",
-            "FromPort" : 80,
-            "ToPort" : 80,
-            "CidrIp" : "0.0.0.0/0"
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80,
+            "CidrIp": "0.0.0.0/0"
           },
           {
-            "IpProtocol" : "tcp",
-            "FromPort" : 443,
-            "ToPort" : 443,
-            "CidrIp" : "0.0.0.0/0"
+            "IpProtocol": "tcp",
+            "FromPort": 443,
+            "ToPort": 443,
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 8080,
+            "ToPort": 8080,
+            "CidrIp": "0.0.0.0/0"
           }
         ]
       }
     },
-
-    "DBSecurityGroup" : {
-      "Type" : "AWS::EC2::SecurityGroup",
-      "Properties" : {
-        "GroupDescription" : "Allow http to client host",
-        "VpcId" : {"Fn::ImportValue" : {"Fn::Sub" : "${NETWORK}-VPC"}}
+    "DBSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "GroupDescription": "Allow http to client host",
+        "VpcId": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${NETWORK}-VPC"
+          }
+        }
       }
     },
-
-
     "DBSecurityGroupIngress": {
       "Type": "AWS::EC2::SecurityGroupIngress",
       "Properties": {
         "GroupId": {
           "Ref": "DBSecurityGroup"
-        },
-        "IpProtocol": "tcp",
-        "FromPort": 5432,
-        "ToPort": 5432,
-        "SourceSecurityGroupId": {
-          "Fn::GetAtt": [
-            "WebSecurityGroup",
-            "GroupId"
-          ]
         }
+      },
+      "IpProtocol": "tcp",
+      "FromPort": 5432,
+      "ToPort": 5432,
+      "SourceSecurityGroupId": {
+        "Fn::GetAtt": [
+          "WebSecurityGroup",
+          "GroupId"
+        ]
       }
     },
-
     "PostGresDB": {
       "Type": "AWS::RDS::DBInstance",
       "Properties": {
@@ -133,42 +158,46 @@
         "DBInstanceIdentifier": "csye6225-su19",
         "MasterUsername": "csye6225master",
         "MasterUserPassword": "csye6225password",
-        "DBSubnetGroupName": {"Ref": "myDBSubnetGroup"},
+        "DBSubnetGroupName": {
+          "Ref": "myDBSubnetGroup"
+        },
         "PubliclyAccessible": true,
         "DBName": "csye6225",
-        "VPCSecurityGroups": [{"Ref": "DBSecurityGroup"}],
+        "VPCSecurityGroups": [
+          {
+            "Ref": "DBSecurityGroup"
+          }
+        ],
         "Tags": [
           {
             "Key": "Name",
             "Value": "PostgreSQL Database"
           }
         ]
-      },
-      "DeletionPolicy": "Delete"
+      }
     },
-
-    "DynamoDB" : {
-      "Type": "AWS::DynamoDB::Table",
-      "Properties": {
-        "TableName": "csye6225",
-        "AttributeDefinitions" : [
-          {
-            "AttributeName" : "id",
-            "AttributeType" : "S"
-          }],
-        "KeySchema" : [
-          {
-            "AttributeName" : "id",
-            "KeyType" : "HASH"
-          }
-        ],
-        "ProvisionedThroughput" : {
-          "ReadCapacityUnits" : "5",
-          "WriteCapacityUnits" : "5"
+    "DeletionPolicy": "Delete"
+  },
+  "DynamoDB": {
+    "Type": "AWS::DynamoDB::Table",
+    "Properties": {
+      "TableName": "csye6225",
+      "AttributeDefinitions": [
+        {
+          "AttributeName": "id",
+          "AttributeType": "S"
         }
+      ],
+      "KeySchema": [
+        {
+          "AttributeName": "id",
+          "KeyType": "HASH"
+        }
+      ],
+      "ProvisionedThroughput": {
+        "ReadCapacityUnits": "5",
+        "WriteCapacityUnits": "5"
       }
     }
-
-
   }
 }
