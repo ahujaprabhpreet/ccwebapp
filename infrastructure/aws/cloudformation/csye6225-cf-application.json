@@ -90,6 +90,12 @@
             "FromPort" : 443,
             "ToPort" : 443,
             "CidrIp" : "0.0.0.0/0"
+          },
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : 8080,
+            "ToPort" : 8080,
+            "CidrIp" : "0.0.0.0/0"
           }
         ]
       }
@@ -100,20 +106,26 @@
       "DeletionPolicy" : "Delete",
       "Properties" : {
         "GroupDescription" : "Allow http to client host",
-        "VpcId" : {"Fn::ImportValue" : {"Fn::Sub" : "${NETWORK}-VPC"}},
-        "SecurityGroupIngress" : [
-          {
-            "IpProtocol" : "tcp",
-            "FromPort" : 5432,
-            "ToPort" : 5432,
-            "SourceSecurityGroupId" : {
-              "Ref" : "WebSecurityGroup"
-            }
-          }
-        ]
+        "VpcId" : {"Fn::ImportValue" : {"Fn::Sub" : "${NETWORK}-VPC"}}
       }
     },
 
+    "DBSecurityGroupIngress": {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "DBSecurityGroup"
+        }
+      },
+      "IpProtocol": "tcp",
+      "FromPort": 5432,
+      "ToPort": 5432,
+      "SourceSecurityGroupId": {
+        "Fn::GetAtt": [
+          "WebSecurityGroup", "GroupId"
+        ]
+      }
+    },
 
     "PostGresDB": {
       "Type": "AWS::RDS::DBInstance",
@@ -135,10 +147,7 @@
             "Key": "Name",
             "Value": "PostgreSQL Database"
           }
-        ],
-        "Port" : 5432,
-        "AvailabilityZone" : {
-          "Fn::Select" : [1, { "Fn::GetAZs" :  { "Ref" :  "AWS::Region" }}]
+        ]
         }
       },
       "DeletionPolicy": "Delete"
