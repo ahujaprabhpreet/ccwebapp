@@ -3,7 +3,7 @@
   "Parameters": {
   },
   "Resources": {
-    "CircleCI-Upload-To-S3": {
+    "CodeDeploy-EC2-S3": {
       "Type": "AWS::IAM::Policy",
       "Properties": {
         "Groups": [
