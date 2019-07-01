@@ -1,0 +1,26 @@
+{
+  "Description": "A text description for the template usage",
+  "Parameters": {
+  },
+  "Resources": {
+    "CodeDeploy-EC2-S3": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "Groups": [
+
+        ],
+        "PolicyDocument": "",
+        "PolicyName": "",
+        "Roles": [
+
+        ],
+        "Users": [
+
+        ]
+      }
+    }
+  },
+  "Outputs": {
+  },
+  "AWSTemplateFormatVersion": "2010-09-09"
+}
