@@ -1,6 +1,12 @@
 {
   "Description": "A text description for the template usage",
   "Parameters": {
+    "MyUser": {
+      "Type": "String"
+    },
+    "MyS3": {
+      "Type": "String"
+    }
   },
   "Resources": {
     "circleci-ec2-ami": {
@@ -55,73 +61,153 @@
         "PolicyName": "circleci-ec2-ami",
         "Users": [
           {
-            "Ref": "circleci"
+            "Ref": "MyUser"
           }
         ]
       }
     },
     "CodeDeploy-EC2-S3": {
-      "Version": "2012-10-17",
-      "Statement": [
-        {
-          "Action": [
-            "s3:Get*",
-            "s3:List*"
-          ],
-          "Effect": "Allow",
-          "Resource": "*"
-        }
-      ]
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "Groups": [
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject"
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:s3:::",
+                      {
+                        "Ref": "MyS3"
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "PolicyName": "CodeDeploy-EC2-S3",
+        "Users": [
+          {
+            "Ref": "MyUser"
+          }
+        ]
+      }
     },
     "CircleCI-Upload-To-S3": {
-      "Version": "2012-10-17",
-      "Statement": [
-        {
-          "Effect": "Allow",
-          "Action": [
-            "s3:PutObject"
-          ],
-          "Resource": [
-            "*"
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "Groups": [
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:PutObject"
+              ],
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:s3:::",
+                      {
+                        "Ref": "MyS3"
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
           ]
-        }
-      ]
+        },
+        "PolicyName": "CircleCI-Upload-To-S3",
+        "Users": [
+          {
+            "Ref": "MyUser"
+          }
+        ]
+      }
     },
     "CirlceCI-Code-Deploy": {
-      "Version": "2012-10-17",
-      "Statement": [
-        {
-          "Effect": "Allow",
-          "Action": [
-            "codedeploy:RegisterApplicationRevision",
-            "codedeploy:GetApplicationRevision"
-          ],
-          "Resource": [
-            "arn:aws:codedeploy:AWS_REGION:AWS_ACCOUNT_ID:application:CODE_DEPLOY_APPLICATION_NAME"
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "Groups": [
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "codedeploy:RegisterApplicationRevision",
+                "codedeploy:GetApplicationRevision"
+              ],
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:codedeploy:us-east-1",
+                      {
+                        "Ref": "AWS_ACCOUNT_ID"
+                      },
+                      "application:csye6225"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "codedeploy:CreateDeployment",
+                "codedeploy:GetDeployment"
+              ],
+              "Resource": [
+                "*"
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "codedeploy:GetDeploymentConfig"
+              ],
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:codedeploy:us-east-1",
+                      {
+                        "Ref": "AWS_ACCOUNT_ID"
+                      },
+                      "deploymentconfig:CodeDeployDefault.AllAtOnce"
+                    ]
+                  ]
+                }
+              ]
+            }
           ]
         },
-        {
-          "Effect": "Allow",
-          "Action": [
-            "codedeploy:CreateDeployment",
-            "codedeploy:GetDeployment"
-          ],
-          "Resource": [
-            "*"
-          ]
-        },
-        {
-          "Effect": "Allow",
-          "Action": [
-            "codedeploy:GetDeploymentConfig"
-          ],
-          "Resource": [
-            "arn:aws:codedeploy:AWS_REGION:AWS_ACCOUNT_ID:deploymentconfig:CodeDeployDefault.OneAtATime",
-            "arn:aws:codedeploy:AWS_REGION:AWS_ACCOUNT_ID:deploymentconfig:CodeDeployDefault.HalfAtATime",
-            "arn:aws:codedeploy:AWS_REGION:AWS_ACCOUNT_ID:deploymentconfig:CodeDeployDefault.AllAtOnce"
-          ]
-        }
-      ]
+        "PolicyName": "CirlceCI-Code-Deploy",
+        "Users": [
+          {
+            "Ref": "MyUser"
+          }
+        ]
+      }
     }
   },
   "Outputs": {
