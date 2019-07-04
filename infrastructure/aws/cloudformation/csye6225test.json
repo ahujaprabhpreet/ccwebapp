@@ -99,7 +99,6 @@
           ]
         },
         "PolicyName": "CodeDeploy-EC2-S3",
-        "Roles" : [  {"Ref": "CodeDeployEC2ServiceRole"}],
         "Users": [
           {
             "Ref": "MyUser"
@@ -161,7 +160,7 @@
               "Resource": [
                 {
                   "Fn::Join": [
-                    ":",
+                    "",
                     [
                       "arn:aws:codedeploy:us-east-1",
                       {
@@ -191,31 +190,7 @@
               "Resource": [
                 {
                   "Fn::Join": [
-                    ":",
-                    [
-                      "arn:aws:codedeploy:us-east-1",
-                      {
-                        "Ref": "AWSACCOUNTID"
-                      },
-                      "deploymentconfig:CodeDeployDefault.OneAtATime"
-                    ]
-                  ]
-                },
-                {
-                  "Fn::Join": [
-                    ":",
-                    [
-                      "arn:aws:codedeploy:us-east-1",
-                      {
-                        "Ref": "AWSACCOUNTID"
-                      },
-                      "deploymentconfig:CodeDeployDefault.HalfAtATime"
-                    ]
-                  ]
-                },
-                {
-                  "Fn::Join": [
-                    ":",
+                    "",
                     [
                       "arn:aws:codedeploy:us-east-1",
                       {
@@ -247,7 +222,7 @@
               "Effect": "Allow",
               "Principal": {
                 "Service": [
-                  "ec2.amazonaws.com"
+                  "ec2.amazonaws.com;"
                 ]
               },
               "Action": [
@@ -257,7 +232,24 @@
           ]
         },
         "Path": "/",
-        "RoleName": "CodeDeployEC2ServiceRole"
+        "Description": "Allow Ec2 instance to call AWS service on your behalf",
+        "RoleName": "CodeDeployEC2ServiceRole",
+        "Policies": [
+          {
+            "Ref": "CodeDeployEC2S3"
+          }
+        ]
+      }
+    },
+    "RootInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "CodeDeployEC2ServiceRole"
+          }
+        ]
       }
     },
     "CodeDeployServiceRole": {
@@ -280,8 +272,11 @@
           ]
         },
         "Path": "/",
+        "Description": "Allows CodeDeploy to call AWS Service such as auto scaling on your behalf",
         "RoleName": "CodeDeployServiceRole",
-        "ManagedPolicyArns" : ["arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole" ]
+        "Policies": [
+          "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
+        ]
       }
     },
     "RootInstanceProfile": {
@@ -290,7 +285,7 @@
         "Path": "/",
         "Roles": [
           {
-            "Ref": "CodeDeployEC2ServiceRole"
+            "Ref": "CodeDeployServiceRole"
           }
         ]
       }
@@ -301,3 +296,7 @@
   },
   "AWSTemplateFormatVersion": "2010-09-09"
 }
+
+
+366263585338
+arn:aws:s3:::csye6225-su19-tanwarp.me.csye6225.com
