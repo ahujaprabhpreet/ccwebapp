@@ -135,16 +135,16 @@
       "Properties": {
         "GroupId": {
           "Ref": "DBSecurityGroup"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": 5432,
+        "ToPort": 5432,
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "WebSecurityGroup",
+            "GroupId"
+          ]
         }
-      },
-      "IpProtocol": "tcp",
-      "FromPort": 5432,
-      "ToPort": 5432,
-      "SourceSecurityGroupId": {
-        "Fn::GetAtt": [
-          "WebSecurityGroup",
-          "GroupId"
-        ]
       }
     },
     "PostGresDB": {
@@ -174,30 +174,31 @@
             "Value": "PostgreSQL Database"
           }
         ]
-      }
+      },
+      "DeletionPolicy": "Delete"
     },
-    "DeletionPolicy": "Delete"
-  },
-  "DynamoDB": {
-    "Type": "AWS::DynamoDB::Table",
-    "Properties": {
-      "TableName": "csye6225",
-      "AttributeDefinitions": [
-        {
-          "AttributeName": "id",
-          "AttributeType": "S"
+    "DynamoDB": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "csye6225",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "id",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "id",
+            "KeyType": "HASH"
+          }
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": "5",
+          "WriteCapacityUnits": "5"
         }
-      ],
-      "KeySchema": [
-        {
-          "AttributeName": "id",
-          "KeyType": "HASH"
-        }
-      ],
-      "ProvisionedThroughput": {
-        "ReadCapacityUnits": "5",
-        "WriteCapacityUnits": "5"
       }
     }
   }
 }
+
