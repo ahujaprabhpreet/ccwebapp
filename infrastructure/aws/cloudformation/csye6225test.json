@@ -12,246 +12,6 @@
     }
   },
   "Resources": {
-    "circleciEc2Ami": {
-      "Type": "AWS::IAM::Policy",
-      "Properties": {
-        "Groups": [
-        ],
-        "PolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Effect": "Allow",
-              "Action": [
-                "ec2:AttachVolume",
-                "ec2:AuthorizeSecurityGroupIngress",
-                "ec2:CopyImage",
-                "ec2:CreateImage",
-                "ec2:CreateKeypair",
-                "ec2:CreateSecurityGroup",
-                "ec2:CreateSnapshot",
-                "ec2:CreateTags",
-                "ec2:CreateVolume",
-                "ec2:DeleteKeyPair",
-                "ec2:DeleteSecurityGroup",
-                "ec2:DeleteSnapshot",
-                "ec2:DeleteVolume",
-                "ec2:DeregisterImage",
-                "ec2:DescribeImageAttribute",
-                "ec2:DescribeImages",
-                "ec2:DescribeInstances",
-                "ec2:DescribeInstanceStatus",
-                "ec2:DescribeRegions",
-                "ec2:DescribeSecurityGroups",
-                "ec2:DescribeSnapshots",
-                "ec2:DescribeSubnets",
-                "ec2:DescribeTags",
-                "ec2:DescribeVolumes",
-                "ec2:DetachVolume",
-                "ec2:GetPasswordData",
-                "ec2:ModifyImageAttribute",
-                "ec2:ModifyInstanceAttribute",
-                "ec2:ModifySnapshotAttribute",
-                "ec2:RegisterImage",
-                "ec2:RunInstances",
-                "ec2:StopInstances",
-                "ec2:TerminateInstances"
-              ],
-              "Resource": "*"
-            }
-          ]
-        },
-        "PolicyName": "circleci-ec2-ami",
-        "Users": [
-          {
-            "Ref": "MyUser"
-          }
-        ]
-      }
-    },
-    "CodeDeployEC2S3": {
-      "Type": "AWS::IAM::Policy",
-      "Properties": {
-        "Groups": [
-        ],
-        "PolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Action": [
-                "s3:GetObject"
-              ],
-              "Effect": "Allow",
-              "Resource": [
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:aws:s3:::",
-                      {
-                        "Ref": "MyS3"
-                      }
-                    ]
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        "PolicyName": "CodeDeploy-EC2-S3",
-        "Users": [
-          {
-            "Ref": "MyUser"
-          }
-        ]
-      }
-    },
-    "CircleCIUploadToS3": {
-      "Type": "AWS::IAM::Policy",
-      "Properties": {
-        "Groups": [
-        ],
-        "PolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Effect": "Allow",
-              "Action": [
-                "s3:PutObject"
-              ],
-              "Resource": [
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:aws:s3:::",
-                      {
-                        "Ref": "MyS3"
-                      }
-                    ]
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        "PolicyName": "CircleCI-Upload-To-S3",
-        "Users": [
-          {
-            "Ref": "MyUser"
-          }
-        ]
-      }
-    },
-    "CirlceCICodeDeploy": {
-      "Type": "AWS::IAM::Policy",
-      "Properties": {
-        "Groups": [
-        ],
-        "PolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Effect": "Allow",
-              "Action": [
-                "codedeploy:RegisterApplicationRevision",
-                "codedeploy:GetApplicationRevision"
-              ],
-              "Resource": [
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:aws:codedeploy:us-east-1",
-                      {
-                        "Ref": "AWSACCOUNTID"
-                      },
-                      "application:csye6225"
-                    ]
-                  ]
-                }
-              ]
-            },
-            {
-              "Effect": "Allow",
-              "Action": [
-                "codedeploy:CreateDeployment",
-                "codedeploy:GetDeployment"
-              ],
-              "Resource": [
-                "*"
-              ]
-            },
-            {
-              "Effect": "Allow",
-              "Action": [
-                "codedeploy:GetDeploymentConfig"
-              ],
-              "Resource": [
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:aws:codedeploy:us-east-1",
-                      {
-                        "Ref": "AWSACCOUNTID"
-                      },
-                      "deploymentconfig:CodeDeployDefault.AllAtOnce"
-                    ]
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        "PolicyName": "CirlceCI-Code-Deploy",
-        "Users": [
-          {
-            "Ref": "MyUser"
-          }
-        ]
-      }
-    },
-    "CodeDeployEC2ServiceRole": {
-      "Type": "AWS::IAM::Role",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Effect": "Allow",
-              "Principal": {
-                "Service": [
-                  "ec2.amazonaws.com;"
-                ]
-              },
-              "Action": [
-                "sts:AssumeRole"
-              ]
-            }
-          ]
-        },
-        "Path": "/",
-        "Description": "Allow Ec2 instance to call AWS service on your behalf",
-        "RoleName": "CodeDeployEC2ServiceRole",
-        "Policies": [
-          {
-            "Ref": "CodeDeployEC2S3"
-          }
-        ]
-      }
-    },
-    "RootInstanceProfile": {
-      "Type": "AWS::IAM::InstanceProfile",
-      "Properties": {
-        "Path": "/",
-        "Roles": [
-          {
-            "Ref": "CodeDeployEC2ServiceRole"
-          }
-        ]
-      }
-    },
     "CodeDeployServiceRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
@@ -272,31 +32,49 @@
           ]
         },
         "Path": "/",
-        "Description": "Allows CodeDeploy to call AWS Service such as auto scaling on your behalf",
         "RoleName": "CodeDeployServiceRole",
-        "Policies": [
+        "ManagedPolicyArns": [
           "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
         ]
       }
     },
-    "RootInstanceProfile": {
-      "Type": "AWS::IAM::InstanceProfile",
+    "CodeDeployApp": {
+      "Type": "AWS::CodeDeploy::Application",
       "Properties": {
-        "Path": "/",
-        "Roles": [
-          {
-            "Ref": "CodeDeployServiceRole"
-          }
-        ]
+        "ApplicationName": "csye6225-webapp",
+        "ComputePlatform": "Server"
+      }
+    },
+    "CodeDeployDeploymentGroup": {
+      "Type": "AWS::CodeDeploy::DeploymentGroup",
+      "Properties": {
+        "ApplicationName": {
+          "Ref": "CodeDeployApp"
+        },
+        "AutoRollbackConfiguration": {
+          "Enabled": "true",
+          "Events": [
+            "DEPLOYMENT_FAILURE"
+          ]
+        },
+        "DeploymentConfigName": "CodeDeployDefault.AllAtOnce",
+        "DeploymentGroupName": "csye6225-webapp-deployment",
+        "DeploymentStyle": {
+          "DeploymentOption": "WITHOUT_TRAFFIC_CONTROL",
+          "DeploymentType": "IN_PLACE"
+        },
+        "ServiceRoleArn": {
+          "Fn::GetAtt": [
+            "CodeDeployServiceRole",
+            "Arn"
+          ]
+        }
       }
     }
   },
   "Outputs": {
-
   },
   "AWSTemplateFormatVersion": "2010-09-09"
 }
 
 
-366263585338
-arn:aws:s3:::csye6225-su19-tanwarp.me.csye6225.com

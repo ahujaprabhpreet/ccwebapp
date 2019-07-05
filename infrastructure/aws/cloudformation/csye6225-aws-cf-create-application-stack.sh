@@ -1,7 +1,7 @@
 #! /bin/bash
 
-# create the VPC from here
-# ./csye6225-aws-cf-create-stack.sh
+#./csye6225-aws-cf-create-stack.sh
+#./csye6225-aws-cf-create-policy-stack.sh
 
 # check if the earlier code ran successfully.
 if [[ $? -eq 0 ]]; then
@@ -16,12 +16,20 @@ if [[ $? -eq 0 ]]; then
     echo -n "Enter Network stack name: "
     read NETWORK
 
+    echo -n "Enter policy stack name: "
+    read policy
+
+    echo -n "Enter image s3bucket  name: "
+    read s3Bucket
+
     # create application resources stack
     aws cloudformation create-stack \
         --stack-name ${APP_STACK_NAME} \
         --template-body file://csye6225-cf-application.json \
         --parameters ParameterKey=AMIID,ParameterValue=$AMIID \
-        ParameterKey=NETWORK,ParameterValue=$NETWORK  --capabilities CAPABILITY_NAMED_IAM
+        ParameterKey=NETWORK,ParameterValue=$NETWORK \
+          ParameterKey=policy,ParameterValue=$policy \
+          ParameterKey=s3Bucket,ParameterValue=$s3Bucket --capabilities CAPABILITY_NAMED_IAM
 
     # check if the
     if [[ $? -ne 0 ]]; then
