@@ -1,13 +1,7 @@
 {
   "Description": "Create policy and roles",
   "Parameters": {
-    "MyUser": {
-      "Type": "String"
-    },
     "MyS3": {
-      "Type": "String"
-    },
-    "AWSACCOUNTID": {
       "Type": "String"
     }
   },
@@ -63,9 +57,7 @@
         },
         "PolicyName": "circleci-ec2-ami",
         "Users": [
-          {
-            "Ref": "MyUser"
-          }
+          "circleci"
         ]
       }
     },
@@ -79,7 +71,8 @@
           "Statement": [
             {
               "Action": [
-                "s3:GetObject"
+                "s3:Get*",
+                "s3:List*"
               ],
               "Effect": "Allow",
               "Resource": [
@@ -90,21 +83,27 @@
                       "arn:aws:s3:::",
                       {
                         "Ref": "MyS3"
-                      }
+                      },
+                      "/*"
                     ]
                   ]
                 }
+              ]
+            },
+            {
+              "Action": [
+                "s3:GetObject",
+                "s3:PutObject"
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                "arn:aws:s3:::csye6225-su19-tanwarp.me.csye6225.com"
               ]
             }
           ]
         },
         "PolicyName": "CodeDeploy-EC2-S3",
-        "Roles" : [  {"Ref": "CodeDeployEC2ServiceRole"}],
-        "Users": [
-          {
-            "Ref": "MyUser"
-          }
-        ]
+        "Roles" : [  {"Ref": "CodeDeployEC2ServiceRole"}]
       }
     },
     "CircleCIUploadToS3": {
@@ -128,7 +127,8 @@
                       "arn:aws:s3:::",
                       {
                         "Ref": "MyS3"
-                      }
+                      },
+                      "/*"
                     ]
                   ]
                 }
@@ -138,9 +138,7 @@
         },
         "PolicyName": "CircleCI-Upload-To-S3",
         "Users": [
-          {
-            "Ref": "MyUser"
-          }
+          "circleci"
         ]
       }
     },
@@ -161,13 +159,10 @@
               "Resource": [
                 {
                   "Fn::Join": [
-                    ":",
+                    "",
                     [
-                      "arn:aws:codedeploy:us-east-1",
-                      {
-                        "Ref": "AWSACCOUNTID"
-                      },
-                      "application:csye6225"
+                      { "Fn::Sub" : "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:application:${CodeDeployApp}" }
+
                     ]
                   ]
                 }
@@ -193,10 +188,7 @@
                   "Fn::Join": [
                     ":",
                     [
-                      "arn:aws:codedeploy:us-east-1",
-                      {
-                        "Ref": "AWSACCOUNTID"
-                      },
+                      { "Fn::Sub" : "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}" },
                       "deploymentconfig:CodeDeployDefault.OneAtATime"
                     ]
                   ]
@@ -205,10 +197,7 @@
                   "Fn::Join": [
                     ":",
                     [
-                      "arn:aws:codedeploy:us-east-1",
-                      {
-                        "Ref": "AWSACCOUNTID"
-                      },
+                      { "Fn::Sub" : "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}" },
                       "deploymentconfig:CodeDeployDefault.HalfAtATime"
                     ]
                   ]
@@ -217,10 +206,7 @@
                   "Fn::Join": [
                     ":",
                     [
-                      "arn:aws:codedeploy:us-east-1",
-                      {
-                        "Ref": "AWSACCOUNTID"
-                      },
+                      { "Fn::Sub" : "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}" },
                       "deploymentconfig:CodeDeployDefault.AllAtOnce"
                     ]
                   ]
@@ -231,9 +217,7 @@
         },
         "PolicyName": "CirlceCI-Code-Deploy",
         "Users": [
-          {
-            "Ref": "MyUser"
-          }
+          "circleci"
         ]
       }
     },
@@ -294,10 +278,54 @@
           }
         ]
       }
+    },
+    "CodeDeployApp": {
+      "Type": "AWS::CodeDeploy::Application",
+      "Properties": {
+        "ApplicationName": "csye6225-webapp",
+        "ComputePlatform": "Server"
+      }
+    },
+    "CodeDeployDeploymentGroup": {
+      "Type": "AWS::CodeDeploy::DeploymentGroup",
+      "Properties": {
+        "ApplicationName": {
+          "Ref": "CodeDeployApp"
+        },
+        "AutoRollbackConfiguration": {
+          "Enabled": "true",
+          "Events": [
+            "DEPLOYMENT_FAILURE"
+          ]
+        },
+        "Ec2TagFilters" : [
+          {
+            "Key": "cloud-key",
+            "Value": "cloud-value",
+            "Type": "KEY_AND_VALUE"
+          }
+        ],
+        "DeploymentConfigName": "CodeDeployDefault.AllAtOnce",
+        "DeploymentGroupName": "csye6225-webapp-deployment",
+        "DeploymentStyle": {
+          "DeploymentOption": "WITHOUT_TRAFFIC_CONTROL",
+          "DeploymentType": "IN_PLACE"
+        },
+        "ServiceRoleArn": {
+          "Fn::GetAtt": [
+            "CodeDeployServiceRole",
+            "Arn"
+          ]
+        }
+      }
     }
   },
   "Outputs": {
-
+    "InstanceProfile" : {
+      "Description" : "instance profile",
+      "Value" :  { "Ref" : "RootInstanceProfile" },
+      "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-InstanceProfile" }}
+    }
   },
   "AWSTemplateFormatVersion": "2010-09-09"
 }

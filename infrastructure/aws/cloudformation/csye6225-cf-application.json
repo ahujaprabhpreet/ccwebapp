@@ -8,6 +8,9 @@
     },
     "s3Bucket":{
       "Type": "String"
+    },
+    "policy": {
+      "Type": "String"
     }
   },
   "AWSTemplateFormatVersion": "2010-09-09",
@@ -27,10 +30,18 @@
         "ImageId": {
           "Ref": "AMIID"
         },
+        "Tags" : [
+          {
+            "Key" : "cloud-key",
+            "Value" : "cloud-value"
+          }
+        ],
         "InstanceType": "t2.micro",
         "KeyName": "centos",
         "IamInstanceProfile": {
-          "Ref": "IAMProfile"
+          "Fn::ImportValue": {
+            "Fn::Sub": "${policy}-InstanceProfile"
+          }
         },
         "BlockDeviceMappings": [
           {
