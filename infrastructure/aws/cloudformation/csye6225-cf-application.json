@@ -30,6 +30,12 @@
         "ImageId": {
           "Ref": "AMIID"
         },
+        "Tags" : [
+          {
+            "Key" : "cloud-key",
+            "Value" : "cloud-value"
+          }
+        ],
         "InstanceType": "t2.micro",
         "KeyName": "centos",
         "IamInstanceProfile": {

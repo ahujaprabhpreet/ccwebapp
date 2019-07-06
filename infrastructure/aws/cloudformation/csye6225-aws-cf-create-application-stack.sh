@@ -1,7 +1,7 @@
 #! /bin/bash
 
-#./csye6225-aws-cf-create-stack.sh
-#./csye6225-aws-cf-create-policy-stack.sh
+#/csye6225-aws-cf-create-stack.sh
+./csye6225-aws-cf-create-policy-stack.sh
 
 # check if the earlier code ran successfully.
 if [[ $? -eq 0 ]]; then

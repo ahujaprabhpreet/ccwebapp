@@ -71,7 +71,8 @@
           "Statement": [
             {
               "Action": [
-                "s3:GetObject"
+                "s3:Get*",
+                "s3:List*"
               ],
               "Effect": "Allow",
               "Resource": [
@@ -82,7 +83,8 @@
                       "arn:aws:s3:::",
                       {
                         "Ref": "MyS3"
-                      }
+                      },
+                      "/*"
                     ]
                   ]
                 }
@@ -125,7 +127,8 @@
                       "arn:aws:s3:::",
                       {
                         "Ref": "MyS3"
-                      }
+                      },
+                      "/*"
                     ]
                   ]
                 }
@@ -158,7 +161,7 @@
                   "Fn::Join": [
                     "",
                     [
-                      { "Fn::Sub" : "arn:aws:codedeploy:${AWS::Region}:${AWS:AccountId}:application:${CodeDeployApp}" }
+                      { "Fn::Sub" : "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:application:${CodeDeployApp}" }
 
                     ]
                   ]
@@ -185,7 +188,7 @@
                   "Fn::Join": [
                     ":",
                     [
-                      { "Fn::Sub" : "arn:aws:codedeploy:${AWS::Region}:${AWS:AccountId}" },
+                      { "Fn::Sub" : "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}" },
                       "deploymentconfig:CodeDeployDefault.OneAtATime"
                     ]
                   ]
@@ -194,7 +197,7 @@
                   "Fn::Join": [
                     ":",
                     [
-                      { "Fn::Sub" : "arn:aws:codedeploy:${AWS::Region}:${AWS:AccountId}" },
+                      { "Fn::Sub" : "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}" },
                       "deploymentconfig:CodeDeployDefault.HalfAtATime"
                     ]
                   ]
@@ -203,7 +206,7 @@
                   "Fn::Join": [
                     ":",
                     [
-                      { "Fn::Sub" : "arn:aws:codedeploy:${AWS::Region}:${AWS:AccountId}" },
+                      { "Fn::Sub" : "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}" },
                       "deploymentconfig:CodeDeployDefault.AllAtOnce"
                     ]
                   ]
@@ -297,10 +300,8 @@
         },
         "Ec2TagFilters" : [
           {
-            "Key": "aws:cloudformation:stack-name",
-            "Value": {
-              "Fn::Sub": "${AWS::StackName}"
-            },
+            "Key": "cloud-key",
+            "Value": "cloud-value",
             "Type": "KEY_AND_VALUE"
           }
         ],
