@@ -51,7 +51,7 @@ public class ImageService {
 
 
     private String path = "";
-    private Bucket bucket = s3.listBuckets().get(1);
+    private Bucket bucket = s3.listBuckets().get(0);
     private String bucket_name = bucket.getName();
 
     public Image getPresignedUrl(UUID id) {
