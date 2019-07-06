@@ -49,8 +49,9 @@ public class ImageService {
 //            .withCredentials(new InstanceProfileCredentialsProvider(false))
 //            .build();
 
+
     private String path = "";
-    private Bucket bucket = s3.listBuckets().get(0);
+    private Bucket bucket = s3.listBuckets().get(1);
     private String bucket_name = bucket.getName();
 
     public Image getPresignedUrl(UUID id) {
