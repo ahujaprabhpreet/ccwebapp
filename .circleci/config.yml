@@ -39,7 +39,7 @@ jobs:
           name: Upload Artifact to S3
           command: |
             echo "uploading artifact"
-            aws s3 cp csye6225-web-app-${CIRCLE_BUILD_NUM}.zip s3://code-deploy.csye6225-su19-tanwarp.me.csye6225.com
+            aws s3 cp codedeploy_artifact/csye6225-web-app-${CIRCLE_BUILD_NUM}.zip s3://code-deploy.csye6225-su19-tanwarp.me.csye6225.com
 
       - run:
           name: Make CodeDeploy API call

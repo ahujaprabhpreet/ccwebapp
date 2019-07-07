@@ -19,5 +19,4 @@ public interface ImageService {
     void deleteExistingFile(String existingFilePath);
 
     void deleteImageById(Book book, Image image);
-
 }
