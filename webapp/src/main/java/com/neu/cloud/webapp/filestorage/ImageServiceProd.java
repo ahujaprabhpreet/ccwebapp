@@ -3,10 +3,11 @@ package com.neu.cloud.webapp.filestorage;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.SdkClientException;
+import com.amazonaws.auth.InstanceProfileCredentialsProvider;
+import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.neu.cloud.webapp.book.Book;
 import com.neu.cloud.webapp.book.BookRepository;
@@ -36,10 +37,7 @@ public class ImageServiceProd implements ImageService{
             .withRegion(Regions.US_EAST_1)
             .build();
 
-//    private Bucket bucket = s3.listBuckets().get(0);
-//    private String bucket_name = bucket.getName();
-
-    @Value("bucket_name")
+    @Value("${BUCKET_NAME}")
     private String bucket_name;
 
     private String path = "";
@@ -90,10 +88,10 @@ public class ImageServiceProd implements ImageService{
         path = file.getOriginalFilename();
 
         try {
+            System.out.println(bucket_name);
             s3.putObject(bucket_name, path, multipartToFile(file, file.getOriginalFilename()));
         } catch (AmazonServiceException e) {
             System.err.println(e.getErrorMessage());
-            System.exit(1);
         }
         return path;
     }
@@ -120,7 +118,6 @@ public class ImageServiceProd implements ImageService{
             s3.deleteObject(bucket_name, existingFilePath);
         } catch (AmazonServiceException e) {
             System.err.println(e.getErrorMessage());
-            System.exit(1);
         }
     }
 

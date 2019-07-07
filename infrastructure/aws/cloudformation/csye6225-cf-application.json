@@ -59,19 +59,19 @@
 
                 "#!/bin/bash -xe",
                 "cd /home/centos/tomcat/bin",
-                "sudo touch environment.sh",
-                "sudo chmod 777 /home/centos/tomcat/bin/environment.sh",
-                "echo 'JAVA_OPTS=\"-Djava.net.preferIPv4Stack=true -Djava.net.preferIPv4Addresses=true\"' >> environment.sh",
-                "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dspring.profiles.active=prod\"' >> environment.sh",
+                "sudo touch setenv.sh",
+                "sudo chmod 777 /home/centos/tomcat/bin/setenv.sh",
+                "echo 'JAVA_OPTS=\"-Djava.net.preferIPv4Stack=true -Djava.net.preferIPv4Addresses=true\"' >> setenv.sh",
+                "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dspring.profiles.active=prod\"' >> setenv.sh",
                 {
                 "Fn::Join" : [
                    "",
                    [
-                   "echo 'JAVA_OPTS=\"-DbucketName=",
+                   "echo 'JAVA_OPTS=\"-DBUCKET_NAME=",
                    {
                       "Ref" : "s3Bucket"
                    },
-                   ".csye6225.com\"' >> environment.sh"
+                   ".csye6225.com\"' >> setenv.sh"
                    ]
                 ]
                 },
@@ -85,12 +85,12 @@
                                "PostGresDB", "Endpoint.Address"	
                             ] 
                          },
-                         ":5432/csye6225\\\"\"' >> environment.sh"
+                         ":5432/csye6225\\\"\"' >> setenv.sh"
                       ]
                    ]
                 },
-                "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dspring.datasource.username=csye6225master\"' >> environment.sh",
-                "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dspring.datasource.password=csye6225password\"' >> environment.sh",                        
+                "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dspring.datasource.username=csye6225master\"' >> setenv.sh",
+                "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dspring.datasource.password=csye6225password\"' >> setenv.sh",                        
                 "cd /home/centos/tomcat/bin/", 
                 "./shutdown.sh",
                 "./startup.sh"
