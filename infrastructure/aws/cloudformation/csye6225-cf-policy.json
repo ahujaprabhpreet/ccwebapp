@@ -3,6 +3,9 @@
   "Parameters": {
     "MyS3": {
       "Type": "String"
+    },
+    "ImageS3Bucket": {
+      "Type": "String"
     }
   },
   "Resources": {
@@ -92,12 +95,23 @@
               "Action": [
                 "s3:GetObject",
                 "s3:PutObject",
-                "s3.DeleteObject",
-                "s3.List*"
+                "s3:DeleteObject",
+                "s3:List*"
               ],
               "Effect": "Allow",
               "Resource": [
-                "arn:aws:s3:::csye6225-su19-tanwarp.me.csye6225.com"
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:s3:::",
+                      {
+                        "Ref": "ImageS3Bucket"
+                      },
+                      "/*"
+                    ]
+                  ]
+                }
               ]
             }
           ]

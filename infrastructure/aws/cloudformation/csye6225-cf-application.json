@@ -15,15 +15,6 @@
   },
   "AWSTemplateFormatVersion": "2010-09-09",
   "Resources": {
-    "IAMProfile": {
-      "Type": "AWS::IAM::InstanceProfile",
-      "Properties": {
-        "InstanceProfileName": "csye6225s3",
-        "Roles": [
-          "csye6225s3client"
-        ]
-      }
-    },
     "EC2Instance": {
       "Type": "AWS::EC2::Instance",
       "Properties": {
