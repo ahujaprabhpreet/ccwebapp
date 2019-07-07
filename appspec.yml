@@ -3,7 +3,7 @@ os: linux
 
 files:
   - source: /home/circleci/project/webapp/target/final.war
-      destination: /home/centos/tomcat/webapps
+    destination: /home/centos/tomcat/webapps
 
 hooks:
   AfterInstall:
