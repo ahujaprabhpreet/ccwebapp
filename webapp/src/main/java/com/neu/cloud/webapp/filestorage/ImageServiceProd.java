@@ -88,7 +88,9 @@ public class ImageServiceProd implements ImageService{
         path = file.getOriginalFilename();
 
         try {
+            System.out.println("hello1");
             System.out.println(bucket_name);
+            System.out.println("hello2");
             s3.putObject(bucket_name, path, multipartToFile(file, file.getOriginalFilename()));
         } catch (AmazonServiceException e) {
             System.err.println(e.getErrorMessage());
