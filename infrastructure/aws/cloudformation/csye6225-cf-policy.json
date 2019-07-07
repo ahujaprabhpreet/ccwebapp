@@ -3,6 +3,9 @@
   "Parameters": {
     "MyS3": {
       "Type": "String"
+    },
+    "ImageS3Bucket": {
+      "Type": "String"
     }
   },
   "Resources": {
@@ -99,7 +102,18 @@
               ],
               "Effect": "Allow",
               "Resource": [
-                "arn:aws:s3:::csye6225-su19-tanwarp.me.csye6225.com"
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:s3:::",
+                      {
+                        "Ref": "ImageS3Bucket"
+                      },
+                      "/*"
+                    ]
+                  ]
+                }
               ]
             }
           ]
