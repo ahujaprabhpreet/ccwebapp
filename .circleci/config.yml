@@ -25,7 +25,7 @@ jobs:
           name: Build Artifact
           command: |
             cd webapp
-            mvn clean install -Pprod
+            mvn clean install -Pdev
 
       - run:
           name: Zip Artifact
