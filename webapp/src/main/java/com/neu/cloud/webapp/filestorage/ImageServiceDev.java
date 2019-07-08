@@ -39,7 +39,9 @@ public class ImageServiceDev implements ImageService{
     @Override
     public String copyImageToFolder(UUID idBook, MultipartFile file) throws Exception{
         String name = idBook + "_" + file.getOriginalFilename();
+        System.out.println(name);
         path = System.getProperty("user.home") + "/images/+" + name;
+        System.out.println(path);
         File temp = new File(path);
         temp.createNewFile();
         FileOutputStream fOutStream = new FileOutputStream(temp);

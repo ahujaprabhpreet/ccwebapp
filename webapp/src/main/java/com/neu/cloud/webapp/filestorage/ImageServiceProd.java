@@ -3,8 +3,6 @@ package com.neu.cloud.webapp.filestorage;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.SdkClientException;
-import com.amazonaws.auth.InstanceProfileCredentialsProvider;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
@@ -88,7 +86,9 @@ public class ImageServiceProd implements ImageService{
         path = file.getOriginalFilename();
 
         try {
+            System.out.println("hello1");
             System.out.println(bucket_name);
+            System.out.println("hello2");
             s3.putObject(bucket_name, path, multipartToFile(file, file.getOriginalFilename()));
         } catch (AmazonServiceException e) {
             System.err.println(e.getErrorMessage());
