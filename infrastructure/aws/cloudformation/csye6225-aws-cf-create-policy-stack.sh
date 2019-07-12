@@ -23,15 +23,15 @@ if [[ $? -eq 0 ]]; then
 
     # check if the
     if [[ $? -ne 0 ]]; then
-        echo "policy  Stack creation not completed"
+        echo "Policy  Stack creation not completed"
         exit 1
     fi
-    echo "policy Resource Stack creation in progress..."
+    echo "Policy Resource Stack creation in progress..."
 
     # waiting stack to create
     aws cloudformation wait stack-create-complete --stack-name $APP_STACK_NAME
     if [[ $? -eq 0 ]]; then
-        echo "policy Resource Stack created successfully"
+        echo "Policy Resource Stack created successfully"
     else
         echo "Stack not created"
     fi
