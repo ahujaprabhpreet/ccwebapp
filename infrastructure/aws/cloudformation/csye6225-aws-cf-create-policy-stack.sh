@@ -31,7 +31,7 @@ if [[ $? -eq 0 ]]; then
     # waiting stack to create
     aws cloudformation wait stack-create-complete --stack-name $APP_STACK_NAME
     if [[ $? -eq 0 ]]; then
-        echo "Psolicy Resource Stack created successfully"
+        echo "Policy Resource Stack created successfully"
     else
         echo "Stack not created"
     fi
