@@ -1,9 +1,6 @@
 version: 2
 jobs:
   build:
-    branches:
-      only:
-        - assignment5
     docker:
       - image: circleci/python
     steps:
