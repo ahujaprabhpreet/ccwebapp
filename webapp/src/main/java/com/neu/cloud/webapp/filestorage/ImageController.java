@@ -13,7 +13,7 @@ import java.util.Date;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/book/{idBook}/image")
+@RequestMapping("/bookpp/{idBook}/image")
 public class ImageController {
 
     @Autowired
