@@ -62,7 +62,7 @@
                    {
                       "Ref" : "s3Bucket"
                    },
-                   ".csye6225.com\"' >> setenv.sh"
+                   "\"' >> setenv.sh"
                    ]
                 ]
                 },

@@ -17,7 +17,7 @@ public class BookController {
     @Autowired
     private BookRepository bookRepository;
 
-    @PostMapping("/bookpp")
+    @PostMapping("/book")
     public ResponseEntity<Book> createBook(@RequestBody Book book){
 
         if(book.getAuthor()==null || book.getQuantity()==null ||
@@ -30,7 +30,7 @@ public class BookController {
 
     }
 
-    @GetMapping("/bookpp")
+    @GetMapping("/book")
     public ResponseEntity getAllBooks(){
 
         List<Book> books = bookRepository.findAll();
@@ -38,7 +38,7 @@ public class BookController {
 
     }
 
-    @GetMapping("/bookpp/{suuid}")
+    @GetMapping("/book/{suuid}")
     public ResponseEntity<Book> getBook(@PathVariable String suuid){
 
         UUID uuid = UUID.randomUUID();
@@ -57,7 +57,7 @@ public class BookController {
 
     }
 
-    @DeleteMapping("/bookpp/{suuid}")
+    @DeleteMapping("/book/{suuid}")
     public ResponseEntity<Void> deleteBook(@PathVariable String suuid){
         UUID uuid = UUID.randomUUID();
         if(!checkUuid(suuid))
@@ -74,7 +74,7 @@ public class BookController {
 
     }
 
-    @PutMapping("/bookpp/{suuid}")
+    @PutMapping("/book/{suuid}")
     public ResponseEntity<Void> updateBook(@RequestBody Book book, @PathVariable String suuid){
 
         UUID uuid = UUID.randomUUID();
