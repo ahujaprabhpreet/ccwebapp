@@ -4,6 +4,8 @@ os: linux
 files:
   - source: /webapp/target/final.war
     destination: /home/centos/tomcat/webapps
+  - source: config-cloudwatch.json
+    destination: /home/centos/tomcat
 
 hooks:
   AfterInstall:
