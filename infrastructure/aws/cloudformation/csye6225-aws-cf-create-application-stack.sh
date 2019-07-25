@@ -72,7 +72,7 @@ if [[ $? -eq 0 ]]; then
     echo "Application Resource Stack creation in progress..."
 
     # waiting stack to create
-    aws cloudformation wait stack-create-complete --stack-name $APP_STACK_NAME
+    aws cloudformation wait stack-create-complete --stack-name ${APP_STACK_NAME}
     if [[ $? -eq 0 ]]; then
         echo "Application Resource Stack created successfully"
     else
