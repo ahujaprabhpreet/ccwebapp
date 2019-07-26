@@ -3,7 +3,6 @@ jobs:
   build:
     branches:
       only:
-        - master
         - assignment6
     docker:
       - image: circleci/python:3.6.5
