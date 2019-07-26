@@ -62,7 +62,7 @@
                    {
                       "Ref" : "s3Bucket"
                    },
-                   ".csye6225.com\"' >> setenv.sh"
+                   "\"' >> setenv.sh"
                    ]
                 ]
                 },
@@ -84,9 +84,7 @@
                 "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dspring.datasource.password=csye6225password\"' >> setenv.sh",                        
                 "cd /home/centos/tomcat/bin/", 
                 "./shutdown.sh",
-                "./startup.sh",
-                "cd",
-                "sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/home/centos/tomcat/config-cloudwatch.json -s"
+                "./startup.sh"
                ] ]
           }
       },

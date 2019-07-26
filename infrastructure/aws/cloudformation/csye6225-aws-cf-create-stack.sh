@@ -11,7 +11,7 @@ else
     echo "VPC Stack name : ${STACK_NAME}"
 fi
 
-# checking stack exit or not
+# checking stack exits or not
 statuscheck=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].StackStatus" >/dev/null 2>&1)
 
 if [[ $? -eq 0 ]]; then
