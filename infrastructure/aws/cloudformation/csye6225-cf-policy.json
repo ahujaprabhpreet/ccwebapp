@@ -255,7 +255,10 @@
           ]
         },
         "Path": "/",
-        "RoleName": "CodeDeployEC2ServiceRole"
+        "RoleName": "CodeDeployEC2ServiceRole",
+        "ManagedPolicyArns" : [
+          "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+        ]
       }
     },
     "CodeDeployServiceRole": {
