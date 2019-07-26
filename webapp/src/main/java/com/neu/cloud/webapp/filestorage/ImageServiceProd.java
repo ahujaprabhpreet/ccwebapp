@@ -9,6 +9,8 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.neu.cloud.webapp.book.Book;
 import com.neu.cloud.webapp.book.BookRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
@@ -34,6 +36,8 @@ public class ImageServiceProd implements ImageService{
     private static final AmazonS3 s3 = AmazonS3ClientBuilder.standard()
             .withRegion(Regions.US_EAST_1)
             .build();
+
+    private static final Logger logger = LoggerFactory.getLogger(ImageController.class);
 
     @Value("${BUCKET_NAME}")
     private String bucket_name;
@@ -86,12 +90,9 @@ public class ImageServiceProd implements ImageService{
         path = file.getOriginalFilename();
 
         try {
-            System.out.println("hello1");
-            System.out.println(bucket_name);
-            System.out.println("hello2");
             s3.putObject(bucket_name, path, multipartToFile(file, file.getOriginalFilename()));
         } catch (AmazonServiceException e) {
-            System.err.println(e.getErrorMessage());
+            logger.error(e.getErrorMessage());
         }
         return path;
     }
@@ -117,7 +118,7 @@ public class ImageServiceProd implements ImageService{
         try {
             s3.deleteObject(bucket_name, existingFilePath);
         } catch (AmazonServiceException e) {
-            System.err.println(e.getErrorMessage());
+            logger.error(e.getErrorMessage());
         }
     }
 
