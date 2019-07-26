@@ -137,3 +137,5 @@ HELP.md
 *.jpeg
 *.png
 *.jpg
+
+.DS_Store

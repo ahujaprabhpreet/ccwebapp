@@ -33,7 +33,8 @@ jobs:
           command: |
             mkdir -p codedeploy_artifact
             cp infrastructure/aws/codedeploy/*.sh .
-            zip -r csye6225-web-app-${CIRCLE_BUILD_NUM}.zip webapp/target/final.war *.sh *.yml
+            cp infrastructure/aws/codedeploy/*.json .
+            zip -r csye6225-web-app-${CIRCLE_BUILD_NUM}.zip webapp/target/final.war *.sh *.yml *.json
             mv csye6225-web-app-${CIRCLE_BUILD_NUM}.zip codedeploy_artifact/
 
       - run:
