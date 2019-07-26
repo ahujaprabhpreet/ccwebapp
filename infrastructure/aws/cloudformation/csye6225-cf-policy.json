@@ -283,8 +283,7 @@
         "Path": "/",
         "RoleName": "CodeDeployServiceRole",
         "ManagedPolicyArns" : [
-          "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole",
-          "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+          "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
         ]
       }
     },
