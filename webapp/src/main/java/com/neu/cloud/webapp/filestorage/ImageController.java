@@ -71,7 +71,6 @@ public class ImageController {
             return new ResponseEntity(new CustomResponse(new Date(),"Book Not Found",""),HttpStatus.NOT_FOUND);
         }
 
-
         Image bookImage = imageService.getPresignedUrl(idImage);
         if(bookImage == null) {
             logger.warn("Image Not Found!");
@@ -100,12 +99,10 @@ public class ImageController {
             return new ResponseEntity(new CustomResponse(new Date(),"Book Not Found",""),HttpStatus.NOT_FOUND);
         }
 
-
         if(book.getImage() == null){
             logger.warn("No existing Image found to update");
             return new ResponseEntity(new CustomResponse(new Date(),"No existing Image found to update",""),HttpStatus.NOT_FOUND);
         }
-
 
         if(!file.getContentType().equals("image/png") && !file.getContentType().equals("image/jpg") && !file.getContentType().equals("image/jpeg")){
             logger.warn("Wrong File Format!");
@@ -117,7 +114,6 @@ public class ImageController {
 
         logger.info("Book Image updated!");
         return  ResponseEntity.noContent().build();
-
     }
 
     @DeleteMapping("/{idImage}")

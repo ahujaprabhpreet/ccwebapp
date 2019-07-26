@@ -1,5 +1,6 @@
 package com.neu.cloud.webapp.book;
 
+import com.neu.cloud.webapp.filestorage.ImageService;
 import com.neu.cloud.webapp.response.CustomResponse;
 import com.timgroup.statsd.StatsDClient;
 import org.slf4j.Logger;
@@ -24,6 +25,13 @@ public class BookController {
 
     @Autowired
     private StatsDClient statsDClient;
+
+    @Autowired
+    private ImageService imageService;
+
+    @Autowired
+    private BookService bookService;
+
 
     @PostMapping("/book")
     public ResponseEntity<Book> createBook(@RequestBody Book book){
@@ -89,17 +97,21 @@ public class BookController {
         }
 
         uuid=UUID.fromString(suuid);
-        Optional<Book> book=bookRepository.findById(uuid);
+//      Optional<Book> book=bookRepository.findById(uuid);
+        Book book = bookService.getBookById(uuid);
 
-        if(!book.isPresent()){
+        if(book == null){
             logger.warn("Book not found");
             return new ResponseEntity(new CustomResponse(new Date(),"Book not found","" ),HttpStatus.NOT_FOUND);
+        }
+
+        if(book.getImage() != null){
+            imageService.deleteImageById(book, book.getImage());
         }
 
         bookRepository.deleteById(uuid);
         logger.info("Book deleted successfully!");
         return ResponseEntity.noContent().build();
-
     }
 
     @PutMapping("/book/{suuid}")
