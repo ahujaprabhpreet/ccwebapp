@@ -17,5 +17,6 @@
 # -c file:/opt/cloudwatch-config.json
 
 cd home/centos/tomcat/bin
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/home/centos/cloudwatch-config.json -s
 sudo ./startup.sh
 sudo ./shutdown.sh
