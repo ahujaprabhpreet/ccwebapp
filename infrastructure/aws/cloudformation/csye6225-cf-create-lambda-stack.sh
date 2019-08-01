@@ -9,8 +9,10 @@ if [[ $? -eq 0 ]]
 then
     echo "Template validation successful"
     read -p "please enter the Stackname: " stackname
+    echo -n "Enter s3 bucket name: "
+    read S3Bucket
     echo "creating stack $stackname now ......"
-    aws cloudformation create-stack --stack-name $stackname --template-body file://csye6225-cf-lambda.json --capabilities CAPABILITY_NAMED_IAM
+    aws cloudformation create-stack --stack-name $stackname --template-body file://csye6225-cf-lambda.json --parameters ParameterKey=S3Bucket,ParameterValue=${S3Bucket} --capabilities CAPABILITY_NAMED_IAM
     if [[ $? -eq 0 ]]
     then
         while true;
