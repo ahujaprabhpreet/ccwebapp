@@ -4,6 +4,9 @@
   "Parameters": {
     "S3Bucket": {
       "Type": "String"
+    },
+    "DomainName": {
+      "Type": "String"
     }
   },
   "Resources" : {
@@ -74,11 +77,14 @@
     "LambdaFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
-        "Handler": "com.neu.cloud.lamda.LambdaRequestHandler::handleRequest",
+        "Handler": "LogEvent::handleRequest",
         "Role": { "Fn::GetAtt" : ["LambdaExecutionRole", "Arn"] },
+        "Environment": {
+          "Variables" : {"Domain" : { "Ref" :  "DomainName"}}
+        },
         "Code": {
           "S3Bucket": { "Ref" :  "S3Bucket"},
-          "S3Key": "final.jar"
+          "S3Key": "webapp-1.0-SNAPSHOT.jar"
         },
         "Runtime": "java8",
         "FunctionName" : "csye6225_summer2019",
