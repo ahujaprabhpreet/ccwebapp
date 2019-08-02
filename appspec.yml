@@ -6,6 +6,8 @@ files:
     destination: /home/centos/tomcat/webapps
   - source: cloudwatch_config.json
     destination: /home/centos/tomcat
+  - source: __pycache__/lambda_function.cpython-37.pyc
+    destination: /home/centos
 
 hooks:
   AfterInstall:
