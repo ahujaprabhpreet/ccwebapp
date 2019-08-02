@@ -7,9 +7,6 @@ import com.amazonaws.services.sns.model.PublishRequest;
 import com.amazonaws.services.sns.model.Topic;
 import com.neu.cloud.webapp.response.CustomResponse;
 import com.timgroup.statsd.StatsDClient;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,28 +102,13 @@ public class UserController {
         statsDClient.incrementCounter("endpoint.user.resetPassword.http.post");
 
         String parsedEmail = user.getUsername();
-
-//        JSONParser parser = new JSONParser();
-//        try {
-//            JSONObject jo = (JSONObject) parser.parse(email);
-//            parsedEmail = (String)jo.get("email");
-//            logger.info("JSON parsed email: " + parsedEmail);
-//
-//            JSONObject body = new JSONObject(request.getRecords().get(0).getSNS().getMessage());
-//
-//        }
-//        catch(ParseException ex){
-//            logger.error("Error parsing email JSON for reset password" + ex.toString());
-//        }
-
-//      JsonObject jsonObject = new JsonObject();
+        logger.info("parsed email: " + parsedEmail);
+        String jsonEmail = "{ \"emailAddress\":\""+user.getUsername()+"\"}";
+        logger.info("json email: " + jsonEmail);
         User exUser =  userRepository.findUsersByUsername(parsedEmail);
 
         if(exUser != null)
         {
-//            AmazonSNS snsClient = AmazonSNSAsyncClientBuilder.standard()
-//                    .withCredentials(new InstanceProfileCredentialsProvider(false))
-//                    .build();
 
             AmazonSNS snsClient = AmazonSNSAsyncClientBuilder.standard()
                     .withRegion(Regions.US_EAST_1)
@@ -138,7 +120,7 @@ public class UserController {
             {
                 if(topic.getTopicArn().endsWith("password_reset")){
 //                    System.out.print(user.getUsername());
-                    PublishRequest req = new PublishRequest(topic.getTopicArn(),exUser.getUsername());
+                    PublishRequest req = new PublishRequest(topic.getTopicArn(),jsonEmail);
                     snsClient.publish(req);
                     break;
                 }
