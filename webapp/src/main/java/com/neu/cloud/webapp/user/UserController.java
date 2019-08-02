@@ -1,6 +1,5 @@
 package com.neu.cloud.webapp.user;
 
-import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSAsyncClientBuilder;
@@ -8,6 +7,9 @@ import com.amazonaws.services.sns.model.PublishRequest;
 import com.amazonaws.services.sns.model.Topic;
 import com.neu.cloud.webapp.response.CustomResponse;
 import com.timgroup.statsd.StatsDClient;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,21 +104,22 @@ public class UserController {
     public ResponseEntity<String> resetPassword(@RequestBody  String email){
         statsDClient.incrementCounter("endpoint.user.resetPassword.http.post");
 
-//        String parseEmail = "";
-//
-//        JSONParser parser = new JSONParser();
-//        try {
-//            JSONObject jo = (JSONObject) parser.parse(email);
-//            parseEmail = (String)jo.get("email");
-//            logger.info("JSON parsed email: " + parseEmail);
-//
-//        }
-//        catch(ParseException ex){
-//            logger.error("Error parsing email JSON for reset password" + ex.toString());
-//        }
+        String parsedEmail = "";
+
+        JSONParser parser = new JSONParser();
+        try {
+            JSONObject jo = (JSONObject) parser.parse(email);
+            parsedEmail = (String)jo.get("email");
+            logger.info("JSON parsed email: " + parsedEmail);
+
+        }
+        catch(ParseException ex){
+            logger.error("Error parsing email JSON for reset password" + ex.toString());
+        }
+
 //        JsonObject jsonObject = new JsonObject();
 
-        User user =  userRepository.findUsersByUsername(email);
+        User user =  userRepository.findUsersByUsername(parsedEmail);
 
         if(user != null)
         {
