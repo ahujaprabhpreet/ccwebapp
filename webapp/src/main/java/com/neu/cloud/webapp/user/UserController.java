@@ -1,9 +1,16 @@
 package com.neu.cloud.webapp.user;
 
+import com.amazonaws.auth.InstanceProfileCredentialsProvider;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.sns.AmazonSNS;
+import com.amazonaws.services.sns.AmazonSNSAsyncClientBuilder;
+import com.amazonaws.services.sns.model.PublishRequest;
+import com.amazonaws.services.sns.model.Topic;
 import com.neu.cloud.webapp.response.CustomResponse;
 import com.timgroup.statsd.StatsDClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalTime;
 import java.util.Date;
+import java.util.List;
 import java.util.regex.Pattern;
 
 @RestController
@@ -90,7 +98,51 @@ public class UserController {
 
     }
 
+    @PostMapping("/reset")
+    public ResponseEntity<String> resetPassword(@RequestBody  String email){
+        statsDClient.incrementCounter("endpoint.user.resetPassword.http.post");
 
+//        String parseEmail = "";
+//
+//        JSONParser parser = new JSONParser();
+//        try {
+//            JSONObject jo = (JSONObject) parser.parse(email);
+//            parseEmail = (String)jo.get("email");
+//            logger.info("JSON parsed email: " + parseEmail);
+//
+//        }
+//        catch(ParseException ex){
+//            logger.error("Error parsing email JSON for reset password" + ex.toString());
+//        }
+//        JsonObject jsonObject = new JsonObject();
 
+        User user =  userRepository.findUsersByUsername(email);
 
+        if(user != null)
+        {
+//            AmazonSNS snsClient = AmazonSNSAsyncClientBuilder.standard()
+//                    .withCredentials(new InstanceProfileCredentialsProvider(false))
+//                    .build();
+
+            AmazonSNS snsClient = AmazonSNSAsyncClientBuilder.standard()
+                    .withRegion(Regions.US_EAST_1)
+                    .build();
+
+            List<Topic> topics = snsClient.listTopics().getTopics();
+
+            for(Topic topic: topics)
+            {
+                if(topic.getTopicArn().endsWith("password_reset")){
+//                    System.out.print(user.getUsername());
+                    PublishRequest req = new PublishRequest(topic.getTopicArn(),user.getUsername());
+                    snsClient.publish(req);
+                    break;
+                }
+            }
+            return new ResponseEntity(new CustomResponse(new Date(),"","" ),HttpStatus.CREATED);
+        }
+        else{
+            return new ResponseEntity(new CustomResponse(new Date(),"","" ),HttpStatus.BAD_REQUEST);
+        }
+    }
 }
