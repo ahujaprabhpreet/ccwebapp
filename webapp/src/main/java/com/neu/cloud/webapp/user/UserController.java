@@ -101,27 +101,28 @@ public class UserController {
     }
 
     @PostMapping("/reset")
-    public ResponseEntity<String> resetPassword(@RequestBody  String email){
+    public ResponseEntity<String> resetPassword(@RequestBody User user){
         statsDClient.incrementCounter("endpoint.user.resetPassword.http.post");
 
-//        String parsedEmail = "";
-//
+        String parsedEmail = user.getUsername();
+
 //        JSONParser parser = new JSONParser();
 //        try {
 //            JSONObject jo = (JSONObject) parser.parse(email);
 //            parsedEmail = (String)jo.get("email");
 //            logger.info("JSON parsed email: " + parsedEmail);
 //
+//            JSONObject body = new JSONObject(request.getRecords().get(0).getSNS().getMessage());
+//
 //        }
 //        catch(ParseException ex){
 //            logger.error("Error parsing email JSON for reset password" + ex.toString());
 //        }
 
-//        JsonObject jsonObject = new JsonObject();
-        logger.info("email from body: " + email);
-        User user =  userRepository.findUsersByUsername(email);
+//      JsonObject jsonObject = new JsonObject();
+        User exUser =  userRepository.findUsersByUsername(parsedEmail);
 
-        if(user != null)
+        if(exUser != null)
         {
 //            AmazonSNS snsClient = AmazonSNSAsyncClientBuilder.standard()
 //                    .withCredentials(new InstanceProfileCredentialsProvider(false))
@@ -137,7 +138,7 @@ public class UserController {
             {
                 if(topic.getTopicArn().endsWith("password_reset")){
 //                    System.out.print(user.getUsername());
-                    PublishRequest req = new PublishRequest(topic.getTopicArn(),user.getUsername());
+                    PublishRequest req = new PublishRequest(topic.getTopicArn(),exUser.getUsername());
                     snsClient.publish(req);
                     break;
                 }
