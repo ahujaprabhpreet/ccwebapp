@@ -104,22 +104,22 @@ public class UserController {
     public ResponseEntity<String> resetPassword(@RequestBody  String email){
         statsDClient.incrementCounter("endpoint.user.resetPassword.http.post");
 
-        String parsedEmail = "";
-
-        JSONParser parser = new JSONParser();
-        try {
-            JSONObject jo = (JSONObject) parser.parse(email);
-            parsedEmail = (String)jo.get("email");
-            logger.info("JSON parsed email: " + parsedEmail);
-
-        }
-        catch(ParseException ex){
-            logger.error("Error parsing email JSON for reset password" + ex.toString());
-        }
+//        String parsedEmail = "";
+//
+//        JSONParser parser = new JSONParser();
+//        try {
+//            JSONObject jo = (JSONObject) parser.parse(email);
+//            parsedEmail = (String)jo.get("email");
+//            logger.info("JSON parsed email: " + parsedEmail);
+//
+//        }
+//        catch(ParseException ex){
+//            logger.error("Error parsing email JSON for reset password" + ex.toString());
+//        }
 
 //        JsonObject jsonObject = new JsonObject();
-
-        User user =  userRepository.findUsersByUsername(parsedEmail);
+        logger.info("email from body: " + email);
+        User user =  userRepository.findUsersByUsername(email);
 
         if(user != null)
         {
