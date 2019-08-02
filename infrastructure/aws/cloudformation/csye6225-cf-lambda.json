@@ -82,6 +82,10 @@
         "Environment": {
           "Variables" : {"Domain" : { "Ref" :  "DomainName"}}
         },
+        "Code": {
+          "S3Bucket": { "Ref" :  "S3Bucket"},
+          "S3Key": "webapp-1.0-SNAPSHOT.jar"
+        },
         "Runtime": "java8",
         "FunctionName" : "csye6225_summer2019",
         "MemorySize" : 256,
