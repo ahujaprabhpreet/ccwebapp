@@ -27,6 +27,7 @@ public class SpringSecurityBAConfig extends WebSecurityConfigurerAdapter {
                 csrf().disable().
                 authorizeRequests().
                 antMatchers("/user/register").permitAll().
+                antMatchers("/reset").permitAll().
                 anyRequest().authenticated().and().
                 formLogin().disable().
                 httpBasic().realmName("Realm").authenticationEntryPoint(new CustomBasicAuthenticationEntryPoint()).and()
