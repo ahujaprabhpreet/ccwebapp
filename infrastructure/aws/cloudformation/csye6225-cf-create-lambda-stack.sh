@@ -5,39 +5,34 @@ echo "Validating the Template......"
 
 aws cloudformation validate-template --template-body file://csye6225-cf-lambda.json #>/dev/null 2>&1
 
-if [[ $? -eq 0 ]]; then
-    echo "Template validation successful"
-    read -p "please enter the Stackname: " stackname
+if [[ $? -eq 0 ]]
+then
+    echo -n "Enter policy stack name: "
+    read APP_STACK_NAME
     echo -n "Enter s3 bucket name: "
     read S3Bucket
-    echo "creating stack $stackname now ......"
+    echo -n "Enter Domain name: "
+    read DomainName
+
     aws cloudformation create-stack \
-    --stack-name $stackname \
+    --stack-name ${APP_STACK_NAME} \
     --template-body file://csye6225-cf-lambda.json \
-    --parameters ParameterKey=S3Bucket,ParameterValue=${S3Bucket} \
+    --parameters ParameterKey=S3Bucket,ParameterValue=${S3Bucket} ParameterKey=DomainName,ParameterValue=${DomainName} \
     --capabilities CAPABILITY_NAMED_IAM
-    if [[ $? -eq 0 ]]
-    then
-        while true;
-        do
-            completionCheck=$(aws cloudformation describe-stacks --stack-name $stackname --query "Stacks[0].StackStatus")
-            if [[ $completionCheck = "\"CREATE_COMPLETE\"" ]]
-            then
-                break
-            else
-                echo -n "."
-            fi
-        done
-        echo "."
-        echo "stack $stackname created Successfully"
+
+     # check if the
+    if [[ $? -ne 0 ]]; then
+        echo "Lambda  Stack creation not completed"
+        exit 1
+    fi
+    echo "Lambda Resource Stack creation in progress..."
+
+    # waiting stack to create
+    aws cloudformation wait stack-create-complete --stack-name ${APP_STACK_NAME}
+    if [[ $? -eq 0 ]]; then
+        echo "Lambda Resource Stack created successfully"
     else
-        errorCheck=$(aws cloudformation describe-stacks --stack-name $stackname --query "Stacks[0].StackStatus")
-        if [ ${errorCheck} = "\"CREATE_COMPLETE\"" ]
-        then
-            echo "Stack: $stackname already exists"
-        else
-            echo "unable to create stack $stackname"
-        fi
+        echo "Stack not created"
     fi
 else
     echo "Unable to validate template"
