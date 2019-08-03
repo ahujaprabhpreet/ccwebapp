@@ -51,5 +51,4 @@ jobs:
             --application-name csye6225-webapp \
             --deployment-config-name CodeDeployDefault.OneAtATime \
             --deployment-group-name csye6225-webapp-deployment \
-            --s3-location bucket=${CODE_DEPLOY_BUCKET},bundleType=zip,key=csye6225-web-app-${CIRCLE_BUILD_NUM}.zip \
-            --s3-location bucket=${CODE_DEPLOY_BUCKET},bundleType=zip,key=csye6225-lambda-${CIRCLE_BUILD_NUM}.zip
+            --s3-location bucket=${CODE_DEPLOY_BUCKET},bundleType=zip,key=csye6225-web-app-${CIRCLE_BUILD_NUM}.zip
