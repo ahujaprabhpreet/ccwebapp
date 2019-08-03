@@ -7,7 +7,11 @@ aws cloudformation validate-template --template-body file://csye6225-cf-lambda.j
 
 if [[ $? -eq 0 ]]
 then
+<<<<<<< HEAD
     echo -n "Enter Lambda stack name: "
+=======
+    echo -n "Enter lamda stack name: "
+>>>>>>> f6047be21425a296c329271ba8299cab7335cd16
     read APP_STACK_NAME
     echo -n "Enter s3 bucket name: "
     read S3Bucket
