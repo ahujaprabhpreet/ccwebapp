@@ -235,6 +235,25 @@
         ]
       }
     },
+    "CircleCILambda": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": "lambda:*",
+              "Resource": "*"
+            }
+          ]
+        },
+        "PolicyName": "CircleCI-Lambda",
+        "Users": [
+          "circleci"
+        ]
+      }
+    },
     "CodeDeployEC2ServiceRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
