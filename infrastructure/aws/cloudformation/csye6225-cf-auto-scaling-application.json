@@ -1,0 +1,574 @@
+{
+  "Parameters": {
+    "AMIID": {
+      "Type": "String"
+    },
+    "NETWORK": {
+      "Type": "String"
+    },
+    "S3BUCKET": {
+      "Type": "String"
+    },
+    "POLICY": {
+      "Type": "String"
+    },
+    "CERTIFICATE": {
+      "Type": "String"
+    },
+    "DNSDOMAIN": {
+      "Type": "String"
+    },
+    "SUBNET1": {
+      "Type": "String"
+    },
+    "SUBNET2": {
+      "Type": "String"
+    },
+    "SUBNET3": {
+      "Type": "String"
+    }
+  },
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": {
+    "EC2Instance": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": {
+          "Ref": "AMIID"
+        },
+        "Tags": [
+          {
+            "Key": "cloud-key",
+            "Value": "cloud-value"
+          }
+        ],
+        "InstanceType": "t2.micro",
+        "KeyName": "centos",
+        "IamInstanceProfile": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${POLICY}-InstanceProfile"
+          }
+        },
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "VolumeType": "gp2",
+              "DeleteOnTermination": true,
+              "VolumeSize": "20"
+            }
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "\n",
+              [
+                "#!/bin/bash -xe",
+                "cd /home/centos/tomcat/bin",
+                "sudo touch setenv.sh",
+                "sudo chmod 777 /home/centos/tomcat/bin/setenv.sh",
+                "echo 'JAVA_OPTS=\"-Djava.net.preferIPv4Stack=true -Djava.net.preferIPv4Addresses=true\"' >> setenv.sh",
+                "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dspring.profiles.active=prod\"' >> setenv.sh",
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "echo 'JAVA_OPTS=\"-DBUCKET_NAME=",
+                      {
+                        "Ref": "S3BUCKET"
+                      },
+                      "\"' >> setenv.sh"
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "echo 'JAVA_OPTS=\"${JAVA_OPTS} -Dspring.datasource.url=\\\"jdbc:postgresql://",
+                      {
+                        "Fn::GetAtt": [
+                          "PostGresDB",
+                          "Endpoint.Address"
+                        ]
+                      },
+                      ":5432/csye6225\\\"\"' >> setenv.sh"
+                    ]
+                  ]
+                },
+                "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dspring.datasource.username=csye6225master\"' >> setenv.sh",
+                "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dspring.datasource.password=csye6225password\"' >> setenv.sh",
+                "cd /home/centos/tomcat/bin/",
+                "./shutdown.sh",
+                "./startup.sh"
+              ]
+            ]
+          }
+        },
+        "NetworkInterfaces": [
+          {
+            "AssociatePublicIpAddress": true,
+            "DeviceIndex": "0",
+            "GroupSet": [
+              {
+                "Ref": "WebSecurityGroup"
+              }
+            ],
+            "SubnetId": {
+              "Fn::ImportValue": {
+                "Fn::Sub": "${NETWORK}-SubnetID3"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "myDBSubnetGroup": {
+      "Type": "AWS::RDS::DBSubnetGroup",
+      "Properties": {
+        "DBSubnetGroupDescription": "description",
+        "SubnetIds": [
+          {
+            "Fn::ImportValue": {
+              "Fn::Sub": "${NETWORK}-SubnetID1"
+            }
+          },
+          {
+            "Fn::ImportValue": {
+              "Fn::Sub": "${NETWORK}-SubnetID2"
+            }
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "String"
+          }
+        ]
+      }
+    },
+    "loadBalancerSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Allow http traffic to webserver",
+        "VpcId": {
+          "Ref": "NETWORK"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "443",
+            "ToPort": "443",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "AWS::StackName"
+                  },
+                  "-csye6225-launch-config"
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "WebSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Allow http to client host",
+        "VpcId": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${NETWORK}-VPC"
+          }
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 8080,
+            "ToPort": 8080,
+            "SourceSecurityGroupId": {
+              "Ref": "loadBalancerSecurityGroup"
+            }
+          }
+        ]
+      }
+    },
+    "DBSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "GroupDescription": "Allow http to client host",
+        "VpcId": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${NETWORK}-VPC"
+          }
+        }
+      }
+    },
+    "DBSecurityGroupIngress": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "DBSecurityGroup"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": 5432,
+        "ToPort": 5432,
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "WebSecurityGroup",
+            "GroupId"
+          ]
+        }
+      }
+    },
+    "PostGresDB": {
+      "Type": "AWS::RDS::DBInstance",
+      "Properties": {
+        "AllocatedStorage": "20",
+        "Engine": "postgres",
+        "EngineVersion": "10.6",
+        "DBInstanceClass": "db.t2.micro",
+        "MultiAZ": false,
+        "DBInstanceIdentifier": "csye6225-su19",
+        "MasterUsername": "csye6225master",
+        "MasterUserPassword": "csye6225password",
+        "DBSubnetGroupName": {
+          "Ref": "myDBSubnetGroup"
+        },
+        "PubliclyAccessible": true,
+        "DBName": "csye6225",
+        "VPCSecurityGroups": [
+          {
+            "Ref": "DBSecurityGroup"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "PostgreSQL Database"
+          }
+        ]
+      },
+      "DeletionPolicy": "Delete"
+    },
+    "DynamoDB": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "csye6225",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "id",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "id",
+            "KeyType": "HASH"
+          }
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": "5",
+          "WriteCapacityUnits": "5"
+        }
+      }
+    },
+    "asg_launch_config": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "AssociatePublicIpAddress": "True",
+        "ImageId": {
+          "Ref": "AMIID"
+        },
+        "KeyName": "centos",
+        "InstanceType": "t2.micro",
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "\n",
+              [
+                "#!/bin/bash -xe",
+                "cd /home/centos/tomcat/bin",
+                "sudo touch setenv.sh",
+                "sudo chmod 777 /home/centos/tomcat/bin/setenv.sh",
+                "echo 'JAVA_OPTS=\"-Djava.net.preferIPv4Stack=true -Djava.net.preferIPv4Addresses=true\"' >> setenv.sh",
+                "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dspring.profiles.active=prod\"' >> setenv.sh",
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "echo 'JAVA_OPTS=\"-DBUCKET_NAME=",
+                      {
+                        "Ref": "S3BUCKET"
+                      },
+                      "\"' >> setenv.sh"
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "echo 'JAVA_OPTS=\"${JAVA_OPTS} -Dspring.datasource.url=\\\"jdbc:postgresql://",
+                      {
+                        "Fn::GetAtt": [
+                          "PostGresDB",
+                          "Endpoint.Address"
+                        ]
+                      },
+                      ":5432/csye6225\\\"\"' >> setenv.sh"
+                    ]
+                  ]
+                },
+                "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dspring.datasource.username=csye6225master\"' >> setenv.sh",
+                "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dspring.datasource.password=csye6225password\"' >> setenv.sh",
+                "cd /home/centos/tomcat/bin/",
+                "./shutdown.sh",
+                "./startup.sh"
+              ]
+            ]
+          }
+        },
+        "SecurityGroups": [
+          {
+            "Ref": "WebSecurityGroup"
+          }
+        ]
+      }
+    },
+    "autoScalingGroup": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "LaunchConfigurationName": {
+          "Ref": "asg_launch_config"
+        },
+        "Cooldown": "60",
+        "DesiredCapacity": "3",
+        "MinSize": "3",
+        "MaxSize": "7",
+        "Tags": [
+          {
+            "PropagateAtLaunch": true,
+            "Key": "Name",
+            "Value": "asg_launch_config"
+          }
+        ]
+      }
+    },
+    "WebServerScaleUpPolicy": {
+      "Type": "AWS::AutoScaling::ScalingPolicy",
+      "Properties": {
+        "AdjustmentType": "ChangeInCapacity",
+        "AutoScalingGroupName": {
+          "Ref": "autoScalingGroup"
+        },
+        "Cooldown": "60",
+        "ScalingAdjustment": "1"
+      }
+    },
+    "WebServerScaleDownPolicy": {
+      "Type": "AWS::AutoScaling::ScalingPolicy",
+      "Properties": {
+        "AdjustmentType": "ChangeInCapacity",
+        "AutoScalingGroupName": {
+          "Ref": "autoScalingGroup"
+        },
+        "Cooldown": "60",
+        "ScalingAdjustment": "-1"
+      }
+    },
+    "CPUAlarmHigh": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Scale-up if CPU > 5% for 5 minutes",
+        "MetricName": "CPUUtilization",
+        "Namespace": "AWS/EC2",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "2",
+        "Threshold": "5",
+        "AlarmActions": [
+          {
+            "Ref": "WebServerScaleUpPolicy"
+          }
+        ],
+        "Dimensions": [
+          {
+            "Name": "AutoScalingGroupName",
+            "Value": {
+              "Ref": "autoScalingGroup"
+            }
+          }
+        ],
+        "ComparisonOperator": "GreaterThanThreshold"
+      }
+    },
+    "CPUAlarmLow": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Scale-down if CPU < 3% for 5 minutes",
+        "MetricName": "CPUUtilization",
+        "Namespace": "AWS/EC2",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "2",
+        "Threshold": "3",
+        "AlarmActions": [
+          {
+            "Ref": "WebServerScaleDownPolicy"
+          }
+        ],
+        "Dimensions": [
+          {
+            "Name": "AutoScalingGroupName",
+            "Value": {
+              "Ref": "autoScalingGroup"
+            }
+          }
+        ],
+        "ComparisonOperator": "LessThanThreshold"
+      }
+    },
+    "elasticAppLoadBalancer": {
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+      "Properties": {
+        "Name": "appLoadbalancer",
+        "SecurityGroups": [
+          {
+            "Ref": "loadBalancerSecurityGroup"
+          }
+        ],
+        "Type": "application",
+        "IpAddressType": "ipv4",
+        "Subnets": [
+          {
+            "Ref": "SUBNET1"
+          },
+          {
+            "Ref": "SUBNET2"
+          },
+          {
+            "Ref": "SUBNET3"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Application Load Balancer"
+          }
+        ]
+      }
+    },
+    "Listener": {
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+      "Properties": {
+        "Certificates": [
+          {
+            "CertificateArn": {
+              "Ref": "CERTIFICATE"
+            }
+          }
+        ],
+        "DefaultActions": [
+          {
+            "Type": "forward",
+            "TargetGroupArn": {
+              "Ref": "loadBalancerTargetGroup"
+            }
+          }
+        ],
+        "LoadBalancerArn": {
+          "Ref": "elasticAppLoadBalancer"
+        },
+        "Port": "443",
+        "Protocol": "HTTPS"
+      }
+    },
+    "httpListener": {
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+      "Properties": {
+        "DefaultActions": [
+          {
+            "Type": "redirect",
+            "RedirectConfig": {
+              "Protocol": "HTTPS",
+              "StatusCode": "HTTP_301",
+              "Port": 443
+            }
+          }
+        ],
+        "LoadBalancerArn": {
+          "Ref": "elasticAppLoadBalancer"
+        },
+        "Port": "80",
+        "Protocol": "HTTP"
+      }
+    },
+    "loadBalancingTargetGroup": {
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+      "Properties": {
+        "Name": "LibMngTargetGroup",
+        "TargetType": "instance",
+        "HealthCheckIntervalSeconds": 30,
+        "HealthCheckPort": 8080,
+        "UnhealthyThresholdCount": 10,
+        "HealthCheckPath": "/",
+        "Protocol": "HTTP",
+        "Port": 8080,
+        "VpcId" : {"Ref" : "myVpc"},
+        "TargetGroupAttributes": [
+          {
+            "Key": "deregistration_delay.timeout_seconds",
+            "Value": "20"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "asg_launch_config"
+          }
+        ]
+      }
+    },
+    "myDomain": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "AliasTarget": {
+          "DNSName": {
+            "Fn::GetAtt": [
+              "elasticAppLoadBalancer",
+              "DNSName"
+            ]
+          },
+          "EvaluateTargetHealth": "true",
+          "HostedZoneId": {
+            "Fn::GetAtt": [
+              "elasticAppLoadBalancer",
+              "CanonicalHostedZoneID"
+            ]
+          }
+        },
+        "Comment": "Domain for my instance",
+        "HostedZoneName": {
+          "Ref": "DNSDOMAIN"
+        },
+        "Name": {
+          "Ref": "DNSDOMAIN"
+        },
+        "Type": "A"
+      }
+    }
+  }
+}
+
+
