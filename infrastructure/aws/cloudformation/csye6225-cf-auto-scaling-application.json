@@ -6,7 +6,7 @@
     "NETWORK": {
       "Type": "String"
     },
-    "S3BUCKET": {
+    "IMAGES3BUCKET": {
       "Type": "String"
     },
     "POLICY": {
@@ -26,36 +26,212 @@
     },
     "SUBNET3": {
       "Type": "String"
+    },
+    "POLICY": {
+      "Type": "String"
     }
   },
   "AWSTemplateFormatVersion": "2010-09-09",
   "Resources": {
-    "EC2Instance": {
-      "Type": "AWS::EC2::Instance",
+    "loadBalancerSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
+        "GroupDescription": "Allow http traffic to webserver",
+        "VpcId": {
+          "Ref": "NETWORK"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "443",
+            "ToPort": "443",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "AWS::StackName"
+                  },
+                  "-csye6225-load-balancer-security"
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "WebSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Allow http to client host",
+        "VpcId": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${NETWORK}-VPC"
+          }
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 8080,
+            "ToPort": 8080,
+            "SourceSecurityGroupId": {
+              "Ref": "loadBalancerSecurityGroup"
+            }
+          }
+        ]
+      }
+    },
+    "loadBalancerTargetGroup": {
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+      "Properties": {
+        "Name": "Load Balancer Target Group",
+        "TargetType": "instance",
+        "HealthCheckIntervalSeconds": 30,
+        "HealthCheckPort": 8080,
+        "UnhealthyThresholdCount": 10,
+        "HealthCheckPath": "/",
+        "Protocol": "HTTP",
+        "Port": 8080,
+        "VpcId" : {"Ref" : "myVpc"},
+        "TargetGroupAttributes": [
+          {
+            "Key": "deregistration_delay.timeout_seconds",
+            "Value": "20"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "load_balancer"
+          }
+        ]
+      }
+    },
+    "elasticAppLoadBalancer": {
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+      "Properties": {
+        "Name": "Elastic App Load Balancer",
+        "SecurityGroups": [
+          {
+            "Ref": "loadBalancerSecurityGroup"
+          }
+        ],
+        "Type": "application",
+        "IpAddressType": "ipv4",
+        "Subnets": [
+          {
+            "Ref": "SUBNET1"
+          },
+          {
+            "Ref": "SUBNET2"
+          },
+          {
+            "Ref": "SUBNET3"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "load_balancer"
+          }
+        ]
+      }
+    },
+    "Listener": {
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+      "Properties": {
+        "Certificates": [
+          {
+            "CertificateArn": {
+              "Ref": "CERTIFICATE"
+            }
+          }
+        ],
+        "DefaultActions": [
+          {
+            "Type": "forward",
+            "TargetGroupArn": {
+              "Ref": "loadBalancerTargetGroup"
+            }
+          }
+        ],
+        "LoadBalancerArn": {
+          "Ref": "elasticAppLoadBalancer"
+        },
+        "Port": "443",
+        "Protocol": "HTTPS"
+      }
+    },
+    "httpListener": {
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+      "Properties": {
+        "DefaultActions": [
+          {
+            "Type": "redirect",
+            "RedirectConfig": {
+              "Protocol": "HTTPS",
+              "StatusCode": "HTTP_301",
+              "Port": 443
+            }
+          }
+        ],
+        "LoadBalancerArn": {
+          "Ref": "elasticAppLoadBalancer"
+        },
+        "Port": "80",
+        "Protocol": "HTTP"
+      }
+    },
+    "myDomain": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "AliasTarget": {
+          "DNSName": {
+            "Fn::GetAtt": [
+              "elasticAppLoadBalancer",
+              "DNSName"
+            ]
+          },
+          "EvaluateTargetHealth": "true",
+          "HostedZoneId": {
+            "Fn::GetAtt": [
+              "elasticAppLoadBalancer",
+              "CanonicalHostedZoneID"
+            ]
+          }
+        },
+        "Comment": "Domain for my instance",
+        "HostedZoneName": {
+          "Ref": "DNSDOMAIN"
+        },
+        "Name": {
+          "Ref": "DNSDOMAIN"
+        },
+        "Type": "A"
+      }
+    },
+    "asg_launch_config": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "AssociatePublicIpAddress": "True",
         "ImageId": {
           "Ref": "AMIID"
         },
-        "Tags": [
-          {
-            "Key": "cloud-key",
-            "Value": "cloud-value"
-          }
-        ],
-        "InstanceType": "t2.micro",
         "KeyName": "centos",
-        "IamInstanceProfile": {
-          "Fn::ImportValue": {
-            "Fn::Sub": "${POLICY}-InstanceProfile"
-          }
-        },
-        "BlockDeviceMappings": [
+        "InstanceType": "t2.micro",
+        "BlockDeviceMappings" : [
           {
-            "DeviceName": "/dev/sda1",
-            "Ebs": {
-              "VolumeType": "gp2",
-              "DeleteOnTermination": true,
-              "VolumeSize": "20"
+            "DeviceName" : "/dev/sda1",
+            "Ebs" : {
+              "VolumeSize" : 20,
+              "VolumeType" : "gp2",
+              "DeleteOnTermination": "true"
             }
           }
         ],
@@ -76,7 +252,7 @@
                     [
                       "echo 'JAVA_OPTS=\"-DBUCKET_NAME=",
                       {
-                        "Ref": "S3BUCKET"
+                        "Ref": "IMAGES3BUCKET"
                       },
                       "\"' >> setenv.sh"
                     ]
@@ -106,22 +282,57 @@
             ]
           }
         },
-        "NetworkInterfaces": [
+        "SecurityGroups": [
           {
-            "AssociatePublicIpAddress": true,
-            "DeviceIndex": "0",
-            "GroupSet": [
-              {
-                "Ref": "WebSecurityGroup"
-              }
-            ],
-            "SubnetId": {
-              "Fn::ImportValue": {
-                "Fn::Sub": "${NETWORK}-SubnetID3"
-              }
-            }
+            "Ref": "WebSecurityGroup"
+          }
+        ],
+        "IamInstanceProfile" : {
+          "Fn::ImportValue" : {
+            "Fn::Sub": "${POLICY}-InstanceProfile"
+          }
+        }
+      }
+    },
+    "autoScalingGroup": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "LaunchConfigurationName": {
+          "Ref": "asg_launch_config"
+        },
+        "Cooldown": "60",
+        "DesiredCapacity": "3",
+        "MinSize": "3",
+        "MaxSize": "7",
+        "Tags": [
+          {
+            "PropagateAtLaunch": true,
+            "Key": "Name",
+            "Value": "asg_launch_config"
           }
         ]
+      }
+    },
+    "WebServerScaleUpPolicy": {
+      "Type": "AWS::AutoScaling::ScalingPolicy",
+      "Properties": {
+        "AdjustmentType": "ChangeInCapacity",
+        "AutoScalingGroupName": {
+          "Ref": "autoScalingGroup"
+        },
+        "Cooldown": "60",
+        "ScalingAdjustment": "1"
+      }
+    },
+    "WebServerScaleDownPolicy": {
+      "Type": "AWS::AutoScaling::ScalingPolicy",
+      "Properties": {
+        "AdjustmentType": "ChangeInCapacity",
+        "AutoScalingGroupName": {
+          "Ref": "autoScalingGroup"
+        },
+        "Cooldown": "60",
+        "ScalingAdjustment": "-1"
       }
     },
     "myDBSubnetGroup": {
@@ -144,60 +355,6 @@
           {
             "Key": "Name",
             "Value": "String"
-          }
-        ]
-      }
-    },
-    "loadBalancerSecurityGroup": {
-      "Type": "AWS::EC2::SecurityGroup",
-      "Properties": {
-        "GroupDescription": "Allow http traffic to webserver",
-        "VpcId": {
-          "Ref": "NETWORK"
-        },
-        "SecurityGroupIngress": [
-          {
-            "IpProtocol": "tcp",
-            "FromPort": "443",
-            "ToPort": "443",
-            "CidrIp": "0.0.0.0/0"
-          }
-        ],
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": {
-              "Fn::Join": [
-                "",
-                [
-                  {
-                    "Ref": "AWS::StackName"
-                  },
-                  "-csye6225-launch-config"
-                ]
-              ]
-            }
-          }
-        ]
-      }
-    },
-    "WebSecurityGroup": {
-      "Type": "AWS::EC2::SecurityGroup",
-      "Properties": {
-        "GroupDescription": "Allow http to client host",
-        "VpcId": {
-          "Fn::ImportValue": {
-            "Fn::Sub": "${NETWORK}-VPC"
-          }
-        },
-        "SecurityGroupIngress": [
-          {
-            "IpProtocol": "tcp",
-            "FromPort": 8080,
-            "ToPort": 8080,
-            "SourceSecurityGroupId": {
-              "Ref": "loadBalancerSecurityGroup"
-            }
           }
         ]
       }
@@ -283,110 +440,6 @@
         }
       }
     },
-    "asg_launch_config": {
-      "Type": "AWS::AutoScaling::LaunchConfiguration",
-      "Properties": {
-        "AssociatePublicIpAddress": "True",
-        "ImageId": {
-          "Ref": "AMIID"
-        },
-        "KeyName": "centos",
-        "InstanceType": "t2.micro",
-        "UserData": {
-          "Fn::Base64": {
-            "Fn::Join": [
-              "\n",
-              [
-                "#!/bin/bash -xe",
-                "cd /home/centos/tomcat/bin",
-                "sudo touch setenv.sh",
-                "sudo chmod 777 /home/centos/tomcat/bin/setenv.sh",
-                "echo 'JAVA_OPTS=\"-Djava.net.preferIPv4Stack=true -Djava.net.preferIPv4Addresses=true\"' >> setenv.sh",
-                "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dspring.profiles.active=prod\"' >> setenv.sh",
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "echo 'JAVA_OPTS=\"-DBUCKET_NAME=",
-                      {
-                        "Ref": "S3BUCKET"
-                      },
-                      "\"' >> setenv.sh"
-                    ]
-                  ]
-                },
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "echo 'JAVA_OPTS=\"${JAVA_OPTS} -Dspring.datasource.url=\\\"jdbc:postgresql://",
-                      {
-                        "Fn::GetAtt": [
-                          "PostGresDB",
-                          "Endpoint.Address"
-                        ]
-                      },
-                      ":5432/csye6225\\\"\"' >> setenv.sh"
-                    ]
-                  ]
-                },
-                "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dspring.datasource.username=csye6225master\"' >> setenv.sh",
-                "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dspring.datasource.password=csye6225password\"' >> setenv.sh",
-                "cd /home/centos/tomcat/bin/",
-                "./shutdown.sh",
-                "./startup.sh"
-              ]
-            ]
-          }
-        },
-        "SecurityGroups": [
-          {
-            "Ref": "WebSecurityGroup"
-          }
-        ]
-      }
-    },
-    "autoScalingGroup": {
-      "Type": "AWS::AutoScaling::AutoScalingGroup",
-      "Properties": {
-        "LaunchConfigurationName": {
-          "Ref": "asg_launch_config"
-        },
-        "Cooldown": "60",
-        "DesiredCapacity": "3",
-        "MinSize": "3",
-        "MaxSize": "7",
-        "Tags": [
-          {
-            "PropagateAtLaunch": true,
-            "Key": "Name",
-            "Value": "asg_launch_config"
-          }
-        ]
-      }
-    },
-    "WebServerScaleUpPolicy": {
-      "Type": "AWS::AutoScaling::ScalingPolicy",
-      "Properties": {
-        "AdjustmentType": "ChangeInCapacity",
-        "AutoScalingGroupName": {
-          "Ref": "autoScalingGroup"
-        },
-        "Cooldown": "60",
-        "ScalingAdjustment": "1"
-      }
-    },
-    "WebServerScaleDownPolicy": {
-      "Type": "AWS::AutoScaling::ScalingPolicy",
-      "Properties": {
-        "AdjustmentType": "ChangeInCapacity",
-        "AutoScalingGroupName": {
-          "Ref": "autoScalingGroup"
-        },
-        "Cooldown": "60",
-        "ScalingAdjustment": "-1"
-      }
-    },
     "CPUAlarmHigh": {
       "Type": "AWS::CloudWatch::Alarm",
       "Properties": {
@@ -439,133 +492,635 @@
         "ComparisonOperator": "LessThanThreshold"
       }
     },
-    "elasticAppLoadBalancer": {
-      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+    "sqlInjectionSet": {
+      "Type": "AWS::WAFRegional::SqlInjectionMatchSet",
+
       "Properties": {
-        "Name": "appLoadbalancer",
-        "SecurityGroups": [
+        "Name": "RegionalSqlInjectionMatchSet",
+        "SqlInjectionMatchTuples": [
           {
-            "Ref": "loadBalancerSecurityGroup"
-          }
-        ],
-        "Type": "application",
-        "IpAddressType": "ipv4",
-        "Subnets": [
-          {
-            "Ref": "SUBNET1"
+            "FieldToMatch": {
+              "Type": "URI"
+            },
+            "TextTransformation": "URL_DECODE"
           },
           {
-            "Ref": "SUBNET2"
+            "FieldToMatch": {
+              "Type": "URI"
+            },
+            "TextTransformation": "HTML_ENTITY_DECODE"
           },
           {
-            "Ref": "SUBNET3"
-          }
-        ],
-        "Tags": [
+            "FieldToMatch": {
+              "Type": "QUERY_STRING"
+            },
+            "TextTransformation": "URL_DECODE"
+          },
           {
-            "Key": "Name",
-            "Value": "Application Load Balancer"
+            "FieldToMatch": {
+              "Type": "QUERY_STRING"
+            },
+            "TextTransformation": "HTML_ENTITY_DECODE"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "BODY"
+            },
+            "TextTransformation": "URL_DECODE"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "BODY"
+            },
+            "TextTransformation": "HTML_ENTITY_DECODE"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "HEADER",
+              "Data": "cookie"
+            },
+            "TextTransformation": "URL_DECODE"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "HEADER",
+              "Data": "cookie"
+            },
+            "TextTransformation": "HTML_ENTITY_DECODE"
           }
         ]
       }
     },
-    "Listener": {
-      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+    "sqlInjectionRule": {
+      "Type": "AWS::WAFRegional::Rule",
+
       "Properties": {
-        "Certificates": [
+        "MetricName": "SqlInjectionRule",
+        "Name": "SqlInjectionRule",
+        "Predicates": [
           {
-            "CertificateArn": {
-              "Ref": "CERTIFICATE"
-            }
-          }
-        ],
-        "DefaultActions": [
-          {
-            "Type": "forward",
-            "TargetGroupArn": {
-              "Ref": "loadBalancerTargetGroup"
-            }
-          }
-        ],
-        "LoadBalancerArn": {
-          "Ref": "elasticAppLoadBalancer"
-        },
-        "Port": "443",
-        "Protocol": "HTTPS"
-      }
-    },
-    "httpListener": {
-      "Type": "AWS::ElasticLoadBalancingV2::Listener",
-      "Properties": {
-        "DefaultActions": [
-          {
-            "Type": "redirect",
-            "RedirectConfig": {
-              "Protocol": "HTTPS",
-              "StatusCode": "HTTP_301",
-              "Port": 443
-            }
-          }
-        ],
-        "LoadBalancerArn": {
-          "Ref": "elasticAppLoadBalancer"
-        },
-        "Port": "80",
-        "Protocol": "HTTP"
-      }
-    },
-    "loadBalancingTargetGroup": {
-      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
-      "Properties": {
-        "Name": "LibMngTargetGroup",
-        "TargetType": "instance",
-        "HealthCheckIntervalSeconds": 30,
-        "HealthCheckPort": 8080,
-        "UnhealthyThresholdCount": 10,
-        "HealthCheckPath": "/",
-        "Protocol": "HTTP",
-        "Port": 8080,
-        "VpcId" : {"Ref" : "myVpc"},
-        "TargetGroupAttributes": [
-          {
-            "Key": "deregistration_delay.timeout_seconds",
-            "Value": "20"
-          }
-        ],
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "asg_launch_config"
+            "Type": "SqlInjectionMatch",
+            "Negated": false,
+            "DataId": {"Ref":"sqlInjectionSet"}
           }
         ]
       }
     },
-    "myDomain": {
-      "Type": "AWS::Route53::RecordSet",
+    "XSSSet": {
+      "Type": "AWS::WAFRegional::XssMatchSet",
+
       "Properties": {
-        "AliasTarget": {
-          "DNSName": {
-            "Fn::GetAtt": [
-              "elasticAppLoadBalancer",
-              "DNSName"
-            ]
+        "Name": "Regional Xss MatchSet",
+        "XssMatchTuples": [
+          {
+            "FieldToMatch": {
+              "Type": "URI"
+            },
+            "TextTransformation": "URL_DECODE"
           },
-          "EvaluateTargetHealth": "true",
-          "HostedZoneId": {
-            "Fn::GetAtt": [
-              "elasticAppLoadBalancer",
-              "CanonicalHostedZoneID"
-            ]
+          {
+            "FieldToMatch": {
+              "Type": "URI"
+            },
+            "TextTransformation": "HTML_ENTITY_DECODE"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "QUERY_STRING"
+            },
+            "TextTransformation": "URL_DECODE"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "QUERY_STRING"
+            },
+            "TextTransformation": "HTML_ENTITY_DECODE"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "BODY"
+            },
+            "TextTransformation": "URL_DECODE"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "BODY"
+            },
+            "TextTransformation": "HTML_ENTITY_DECODE"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "HEADER",
+              "Data": "cookie"
+            },
+            "TextTransformation": "URL_DECODE"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "HEADER",
+              "Data": "cookie"
+            },
+            "TextTransformation": "HTML_ENTITY_DECODE"
           }
+        ]
+      }
+    },
+    "XSSRule": {
+      "Type": "AWS::WAFRegional::Rule",
+
+      "Properties": {
+        "MetricName": "XSSRule",
+        "Name": "XSSRule",
+        "Predicates": [
+          {
+            "Type": "XssMatch",
+            "Negated": false,
+            "DataId": {"Ref":"XSSSet"}
+          }
+        ]
+      }
+    },
+    "PathsStringSet": {
+      "Type": "AWS::WAFRegional::ByteMatchSet",
+      "Properties": {
+        "Name": "RegionalPathsStringSet",
+        "ByteMatchTuples": [
+          {
+            "FieldToMatch": {
+              "Type": "URI"
+            },
+            "PositionalConstraint": "CONTAINS",
+            "TargetString": "../",
+            "TextTransformation": "URL_DECODE"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "URI"
+            },
+            "PositionalConstraint": "CONTAINS",
+            "TargetString": "../",
+            "TextTransformation": "HTML_ENTITY_DECODE"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "QUERY_STRING"
+            },
+            "PositionalConstraint": "CONTAINS",
+            "TargetString": "../",
+            "TextTransformation": "URL_DECODE"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "QUERY_STRING"
+            },
+            "PositionalConstraint": "CONTAINS",
+            "TargetString": "../",
+            "TextTransformation": "HTML_ENTITY_DECODE"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "URI"
+            },
+            "PositionalConstraint": "CONTAINS",
+            "TargetString": "://",
+            "TextTransformation": "URL_DECODE"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "URI"
+            },
+            "PositionalConstraint": "CONTAINS",
+            "TargetString": "://",
+            "TextTransformation": "HTML_ENTITY_DECODE"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "QUERY_STRING"
+            },
+            "PositionalConstraint": "CONTAINS",
+            "TargetString": "://",
+            "TextTransformation": "URL_DECODE"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "QUERY_STRING"
+            },
+            "PositionalConstraint": "CONTAINS",
+            "TargetString": "://",
+            "TextTransformation": "HTML_ENTITY_DECODE"
+          }
+        ]
+      }
+    },
+    "PathsRule": {
+      "Type": "AWS::WAFRegional::Rule",
+
+      "Properties": {
+        "MetricName": "PathsRuleMetric",
+        "Name": "PathsRuleName",
+        "Predicates": [
+          {
+            "Type": "ByteMatch",
+            "Negated": false,
+            "DataId": {"Ref":"PathsStringSet"}
+          }
+        ]
+      }
+    },
+    "ServerSideIncludesSet": {
+      "Type": "AWS::WAFRegional::ByteMatchSet",
+      "Properties": {
+        "Name": "Server Side Includes Set",
+        "ByteMatchTuples": [
+          {
+            "FieldToMatch": {
+              "Type": "URI"
+            },
+            "TargetString": "/includes",
+            "TextTransformation": "URL_DECODE",
+            "PositionalConstraint": "STARTS_WITH"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "URI"
+            },
+            "TargetString": ".cfg",
+            "TextTransformation": "LOWERCASE",
+            "PositionalConstraint": "ENDS_WITH"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "URI"
+            },
+            "TargetString": ".conf",
+            "TextTransformation": "LOWERCASE",
+            "PositionalConstraint": "ENDS_WITH"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "URI"
+            },
+            "TargetString": ".config",
+            "TextTransformation": "LOWERCASE",
+            "PositionalConstraint": "ENDS_WITH"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "URI"
+            },
+            "TargetString": ".ini",
+            "TextTransformation": "LOWERCASE",
+            "PositionalConstraint": "ENDS_WITH"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "URI"
+            },
+            "TargetString": ".log",
+            "TextTransformation": "LOWERCASE",
+            "PositionalConstraint": "ENDS_WITH"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "URI"
+            },
+            "TargetString": ".bak",
+            "TextTransformation": "LOWERCASE",
+            "PositionalConstraint": "ENDS_WITH"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "URI"
+            },
+            "TargetString": ".bakup",
+            "TextTransformation": "LOWERCASE",
+            "PositionalConstraint": "ENDS_WITH"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "URI"
+            },
+            "TargetString": ".txt",
+            "TextTransformation": "LOWERCASE",
+            "PositionalConstraint": "ENDS_WITH"
+          }
+        ]
+      }
+    },
+    "ServerSideIncludesRule": {
+      "Type": "AWS::WAFRegional::Rule",
+      "Properties": {
+        "Name": "ServerSideIncludesRule",
+        "MetricName": "ServerSideIncludesRule",
+        "Predicates": [
+          {
+            "DataId": {
+              "Ref": "ServerSideIncludesSet"
+            },
+            "Negated": false,
+            "Type": "ByteMatch"
+          }
+        ]
+      }
+    },
+    "AuthTokenStringSet": {
+      "Type": "AWS::WAFRegional::ByteMatchSet",
+      "Properties": {
+        "Name": "Regional Byte MatchSet",
+        "ByteMatchTuples": [
+          {
+            "FieldToMatch": {
+              "Type": "HEADER",
+              "Data": "cookie"
+            },
+            "PositionalConstraint": "CONTAINS",
+            "TargetString": "csye6225-summer2019",
+            "TextTransformation": "NONE"
+          }
+        ]
+      }
+    },
+    "AuthTokenRule": {
+      "Type": "AWS::WAFRegional::Rule",
+
+      "Properties": {
+        "MetricName": "AuthTokenRule",
+        "Name": "AuthTokenRule",
+        "Predicates": [
+          {
+            "Type": "ByteMatch",
+            "Negated": false,
+            "DataId": {"Ref":"AuthTokenStringSet"}
+          }
+        ]
+      }
+    },
+    "BadReferers": {
+      "Type": "AWS::WAFRegional::ByteMatchSet",
+      "Properties": {
+        "Name": "Bad Referers",
+        "ByteMatchTuples": [
+          {
+            "FieldToMatch": {
+              "Type": "HEADER",
+              "Data": "cookie"
+            },
+            "TargetString": "badrefer1",
+            "TextTransformation": "URL_DECODE",
+            "PositionalConstraint": "CONTAINS"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "HEADER",
+              "Data": "authorization"
+            },
+            "TargetString": "QGdtYWlsLmNvbQ==",
+            "TextTransformation": "URL_DECODE",
+            "PositionalConstraint": "CONTAINS"
+          }
+        ]
+      }
+    },
+    "BadReferersRule": {
+      "Type": "AWS::WAFRegional::Rule",
+      "Properties": {
+        "Name": "BadReferersRule",
+        "MetricName": "BadReferersRule",
+        "Predicates": [
+          {
+            "DataId": {
+              "Ref": "BadReferers"
+            },
+            "Negated": false,
+            "Type": "ByteMatch"
+          }
+        ]
+      }
+    },
+    "IpBlacklistSet": {
+      "Type": "AWS::WAFRegional::IPSet",
+
+      "Properties": {
+        "Name": "IPSet for blacklisted IP addresses avoiding security vulnerabilities",
+        "IPSetDescriptors": [
+          {
+            "Type": "IPV4",
+            "Value": "10.0.0.0/8"
+          },
+          {
+            "Type": "IPV4",
+            "Value": "192.168.0.0/16"
+          },
+          {
+            "Type": "IPV4",
+            "Value": "169.254.0.0/16"
+          },
+          {
+            "Type": "IPV4",
+            "Value": "172.16.0.0/16"
+          },
+          {
+            "Type": "IPV4",
+            "Value": "127.0.0.1/32"
+          }
+        ]
+      }
+    },
+    "IpBlacklistRule": {
+      "Type": "AWS::WAFRegional::Rule",
+
+      "Properties": {
+        "MetricName": "IpBlacklistRule",
+        "Name": "IpBlacklistRule",
+        "Predicates": [
+          {
+            "Type": "IPMatch",
+            "Negated": false,
+            "DataId": {"Ref":"IpBlacklistSet"}
+          }
+        ]
+      }
+    },
+    "MyIPSetWhiteList": {
+      "Type": "AWS::WAFRegional::IPSet",
+      "Properties": {
+        "Name": "WhiteList IP Address Set",
+        "IPSetDescriptors": [
+          {
+            "Type": "IPV4",
+            "Value": "11.0.0.0/16"
+          }
+        ]
+      }
+    },
+    "MyIPSetWhiteListRule": {
+      "Type": "AWS::WAFRegional::Rule",
+      "Properties": {
+        "Name": "WhiteList IP Address Rule",
+        "MetricName": "MyIPSetWhiteListRule",
+        "Predicates": [
+          {
+            "DataId": {
+              "Ref": "MyIPSetWhiteList"
+            },
+            "Negated": false,
+            "Type": "IPMatch"
+          }
+        ]
+      }
+    },
+    "SizeRestrictionSet": {
+      "Type": "AWS::WAFRegional::SizeConstraintSet",
+
+      "Properties": {
+        "Name": "RegionslSizeConstraintMatchSet",
+        "SizeConstraints": [
+          {
+            "FieldToMatch": {
+              "Type": "URI"
+            },
+            "TextTransformation": "NONE",
+            "ComparisonOperator": "GT",
+            "Size": "512"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "QUERY_STRING"
+            },
+            "TextTransformation": "NONE",
+            "ComparisonOperator": "GT",
+            "Size": "1024"
+          },
+          {
+            "FieldToMatch": {
+              "Type": "BODY"
+            },
+            "TextTransformation": "NONE",
+            "ComparisonOperator": "GT",
+            "Size":"10000000"
+          },
+          {
+            "FieldToMatch": {
+              "Type" : "HEADER",
+              "Data": "cookie"
+            },
+            "TextTransformation": "NONE",
+            "ComparisonOperator": "GT",
+            "Size":"4096"
+
+          }
+        ]
+      }
+    },
+    "SizeRestrictionRule": {
+      "Type": "AWS::WAFRegional::Rule",
+
+      "Properties": {
+        "MetricName": "SizeRestrictionRule",
+        "Name": "SizeRestrictionRule",
+        "Predicates": [
+          {
+            "Type": "SizeConstraint",
+            "Negated": false,
+            "DataId": {"Ref":"SizeRestrictionSet"}
+          }
+        ]
+      }
+    },
+    "MyWebACL": {
+      "Type": "AWS::WAFRegional::WebACL",
+
+      "Properties": {
+
+        "Name": "My Web ACL",
+        "DefaultAction": {
+          "Type": "ALLOW"
         },
-        "Comment": "Domain for my instance",
-        "HostedZoneName": {
-          "Ref": "DNSDOMAIN"
-        },
-        "Name": {
-          "Ref": "DNSDOMAIN"
-        },
-        "Type": "A"
+        "MetricName": "WebACL",
+        "Rules": [
+
+          {
+            "Action": {
+              "Type": "BLOCK"
+            },
+            "Priority": 1,
+            "RuleId": {"Ref":"sqlinjectionRule"}
+          },
+
+          {
+            "Action": {
+              "Type": "BLOCK"
+            },
+            "Priority": 2,
+            "RuleId": {"Ref":"AuthTokenRule"}
+          },
+
+          {
+            "Action": {
+              "Type": "BLOCK"
+            },
+            "Priority": 3,
+            "RuleId": {"Ref":"XSSRule"}
+          },
+          {
+            "Action": {
+              "Type": "BLOCK"
+            },
+            "Priority": 4,
+            "RuleId": {"Ref":"PathsRule"}
+          },
+          {
+            "Action": {
+              "Type": "BLOCK"
+            },
+            "Priority": 5,
+            "RuleId": {"Ref":"IpBlacklistRule"}
+          },
+          {
+            "Action": {
+              "Type": "BLOCK"
+            },
+            "Priority": 6,
+            "RuleId": {"Ref":"SizeRestrictionRule"}
+          },
+          {
+            "Action": {
+              "Type": "BLOCK"
+            },
+            "Priority": 1,
+            "RuleId": {"Ref":"sqlinjectionRule"}
+          },
+          {
+            "Action": {
+              "Type": "BLOCK"
+            },
+            "Priority": 1,
+            "RuleId": {"Ref":"sqlinjectionRule"}
+          },
+          {
+            "Action": {
+              "Type": "BLOCK"
+            },
+            "Priority": 1,
+            "RuleId": {"Ref":"sqlinjectionRule"}
+          },
+          {
+            "Action": {
+              "Type": "BLOCK"
+            },
+            "Priority": 10,
+            "RuleId": {"Ref":"MyIPSetWhiteListRule"}
+          }
+        ]
+      }
+    },
+    "MyWebACLAssociation": {
+
+      "Type": "AWS::WAFRegional::WebACLAssociation",
+      "DependsOn":["elasticAppLoadBalancer","MyWebACL"],
+      "Properties": {
+        "ResourceArn": { "Ref": "elasticAppLoadBalancer" },
+        "WebACLId": { "Ref": "MyWebACL" }
       }
     }
   }
