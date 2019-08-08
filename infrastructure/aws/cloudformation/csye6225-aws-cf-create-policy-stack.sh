@@ -36,11 +36,11 @@ if [[ $? -eq 0 ]]; then
     fi
 
     # create application resources stack
-    aws cloudformation create-stack \
+    VAL=$(aws cloudformation create-stack \
         --stack-name ${APP_STACK_NAME} \
         --template-body file://csye6225-cf-policy.json \
         --parameters ParameterKey=MyS3,ParameterValue=${S3_CODE_DEPLOY_BUCKET} ParameterKey=ImageS3Bucket,ParameterValue=${S3_IMAGE_BUCKET} \
-        --capabilities CAPABILITY_NAMED_IAM
+        --capabilities CAPABILITY_NAMED_IAM)
 
     # check if the
     if [[ $? -ne 0 ]]; then
@@ -53,6 +53,7 @@ if [[ $? -eq 0 ]]; then
     aws cloudformation wait stack-create-complete --stack-name ${APP_STACK_NAME}
     if [[ $? -eq 0 ]]; then
         echo "Policy Resource Stack created successfully"
+        echo ${VAL}
     else
         echo "Stack not created"
     fi

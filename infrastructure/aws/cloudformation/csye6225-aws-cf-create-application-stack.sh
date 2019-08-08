@@ -14,7 +14,7 @@ if [[ $? -eq 0 ]]; then
         echo "AMI ID : ${AMI_ID}"
     fi
 
-    echo -n "Enter application stack name: "
+    echo -n "Enter auto scaling stack name: "
     read APP_STACK_NAME
 
     if [[ ${APP_STACK_NAME} == "" ]]; then

@@ -6,7 +6,7 @@
     "NETWORK": {
       "Type": "String"
     },
-    "S3BUCKET": {
+    "IMAGES3BUCKET": {
       "Type": "String"
     },
     "POLICY": {
@@ -26,36 +26,212 @@
     },
     "SUBNET3": {
       "Type": "String"
+    },
+    "POLICY": {
+      "Type": "String"
     }
   },
   "AWSTemplateFormatVersion": "2010-09-09",
   "Resources": {
-    "EC2Instance": {
-      "Type": "AWS::EC2::Instance",
+    "loadBalancerSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
+        "GroupDescription": "Allow http traffic to webserver",
+        "VpcId": {
+          "Ref": "NETWORK"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "443",
+            "ToPort": "443",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "AWS::StackName"
+                  },
+                  "-csye6225-load-balancer-security"
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "WebSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Allow http to client host",
+        "VpcId": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${NETWORK}-VPC"
+          }
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 8080,
+            "ToPort": 8080,
+            "SourceSecurityGroupId": {
+              "Ref": "loadBalancerSecurityGroup"
+            }
+          }
+        ]
+      }
+    },
+    "loadBalancerTargetGroup": {
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+      "Properties": {
+        "Name": "Load Balancer Target Group",
+        "TargetType": "instance",
+        "HealthCheckIntervalSeconds": 30,
+        "HealthCheckPort": 8080,
+        "UnhealthyThresholdCount": 10,
+        "HealthCheckPath": "/",
+        "Protocol": "HTTP",
+        "Port": 8080,
+        "VpcId" : {"Ref" : "myVpc"},
+        "TargetGroupAttributes": [
+          {
+            "Key": "deregistration_delay.timeout_seconds",
+            "Value": "20"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "load_balancer"
+          }
+        ]
+      }
+    },
+    "elasticAppLoadBalancer": {
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+      "Properties": {
+        "Name": "Elastic App Load Balancer",
+        "SecurityGroups": [
+          {
+            "Ref": "loadBalancerSecurityGroup"
+          }
+        ],
+        "Type": "application",
+        "IpAddressType": "ipv4",
+        "Subnets": [
+          {
+            "Ref": "SUBNET1"
+          },
+          {
+            "Ref": "SUBNET2"
+          },
+          {
+            "Ref": "SUBNET3"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "load_balancer"
+          }
+        ]
+      }
+    },
+    "Listener": {
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+      "Properties": {
+        "Certificates": [
+          {
+            "CertificateArn": {
+              "Ref": "CERTIFICATE"
+            }
+          }
+        ],
+        "DefaultActions": [
+          {
+            "Type": "forward",
+            "TargetGroupArn": {
+              "Ref": "loadBalancerTargetGroup"
+            }
+          }
+        ],
+        "LoadBalancerArn": {
+          "Ref": "elasticAppLoadBalancer"
+        },
+        "Port": "443",
+        "Protocol": "HTTPS"
+      }
+    },
+    "httpListener": {
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+      "Properties": {
+        "DefaultActions": [
+          {
+            "Type": "redirect",
+            "RedirectConfig": {
+              "Protocol": "HTTPS",
+              "StatusCode": "HTTP_301",
+              "Port": 443
+            }
+          }
+        ],
+        "LoadBalancerArn": {
+          "Ref": "elasticAppLoadBalancer"
+        },
+        "Port": "80",
+        "Protocol": "HTTP"
+      }
+    },
+    "myDomain": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "AliasTarget": {
+          "DNSName": {
+            "Fn::GetAtt": [
+              "elasticAppLoadBalancer",
+              "DNSName"
+            ]
+          },
+          "EvaluateTargetHealth": "true",
+          "HostedZoneId": {
+            "Fn::GetAtt": [
+              "elasticAppLoadBalancer",
+              "CanonicalHostedZoneID"
+            ]
+          }
+        },
+        "Comment": "Domain for my instance",
+        "HostedZoneName": {
+          "Ref": "DNSDOMAIN"
+        },
+        "Name": {
+          "Ref": "DNSDOMAIN"
+        },
+        "Type": "A"
+      }
+    },
+    "asg_launch_config": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "AssociatePublicIpAddress": "True",
         "ImageId": {
           "Ref": "AMIID"
         },
-        "Tags": [
-          {
-            "Key": "cloud-key",
-            "Value": "cloud-value"
-          }
-        ],
-        "InstanceType": "t2.micro",
         "KeyName": "centos",
-        "IamInstanceProfile": {
-          "Fn::ImportValue": {
-            "Fn::Sub": "${POLICY}-InstanceProfile"
-          }
-        },
-        "BlockDeviceMappings": [
+        "InstanceType": "t2.micro",
+        "BlockDeviceMappings" : [
           {
-            "DeviceName": "/dev/sda1",
-            "Ebs": {
-              "VolumeType": "gp2",
-              "DeleteOnTermination": true,
-              "VolumeSize": "20"
+            "DeviceName" : "/dev/sda1",
+            "Ebs" : {
+              "VolumeSize" : 20,
+              "VolumeType" : "gp2",
+              "DeleteOnTermination": "true"
             }
           }
         ],
@@ -76,7 +252,7 @@
                     [
                       "echo 'JAVA_OPTS=\"-DBUCKET_NAME=",
                       {
-                        "Ref": "S3BUCKET"
+                        "Ref": "IMAGES3BUCKET"
                       },
                       "\"' >> setenv.sh"
                     ]
@@ -106,22 +282,57 @@
             ]
           }
         },
-        "NetworkInterfaces": [
+        "SecurityGroups": [
           {
-            "AssociatePublicIpAddress": true,
-            "DeviceIndex": "0",
-            "GroupSet": [
-              {
-                "Ref": "WebSecurityGroup"
-              }
-            ],
-            "SubnetId": {
-              "Fn::ImportValue": {
-                "Fn::Sub": "${NETWORK}-SubnetID3"
-              }
-            }
+            "Ref": "WebSecurityGroup"
+          }
+        ],
+        "IamInstanceProfile" : {
+          "Fn::ImportValue" : {
+            "Fn::Sub": "${POLICY}-InstanceProfile"
+          }
+        }
+      }
+    },
+    "autoScalingGroup": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "LaunchConfigurationName": {
+          "Ref": "asg_launch_config"
+        },
+        "Cooldown": "60",
+        "DesiredCapacity": "3",
+        "MinSize": "3",
+        "MaxSize": "7",
+        "Tags": [
+          {
+            "PropagateAtLaunch": true,
+            "Key": "Name",
+            "Value": "asg_launch_config"
           }
         ]
+      }
+    },
+    "WebServerScaleUpPolicy": {
+      "Type": "AWS::AutoScaling::ScalingPolicy",
+      "Properties": {
+        "AdjustmentType": "ChangeInCapacity",
+        "AutoScalingGroupName": {
+          "Ref": "autoScalingGroup"
+        },
+        "Cooldown": "60",
+        "ScalingAdjustment": "1"
+      }
+    },
+    "WebServerScaleDownPolicy": {
+      "Type": "AWS::AutoScaling::ScalingPolicy",
+      "Properties": {
+        "AdjustmentType": "ChangeInCapacity",
+        "AutoScalingGroupName": {
+          "Ref": "autoScalingGroup"
+        },
+        "Cooldown": "60",
+        "ScalingAdjustment": "-1"
       }
     },
     "myDBSubnetGroup": {
@@ -144,60 +355,6 @@
           {
             "Key": "Name",
             "Value": "String"
-          }
-        ]
-      }
-    },
-    "loadBalancerSecurityGroup": {
-      "Type": "AWS::EC2::SecurityGroup",
-      "Properties": {
-        "GroupDescription": "Allow http traffic to webserver",
-        "VpcId": {
-          "Ref": "NETWORK"
-        },
-        "SecurityGroupIngress": [
-          {
-            "IpProtocol": "tcp",
-            "FromPort": "443",
-            "ToPort": "443",
-            "CidrIp": "0.0.0.0/0"
-          }
-        ],
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": {
-              "Fn::Join": [
-                "",
-                [
-                  {
-                    "Ref": "AWS::StackName"
-                  },
-                  "-csye6225-launch-config"
-                ]
-              ]
-            }
-          }
-        ]
-      }
-    },
-    "WebSecurityGroup": {
-      "Type": "AWS::EC2::SecurityGroup",
-      "Properties": {
-        "GroupDescription": "Allow http to client host",
-        "VpcId": {
-          "Fn::ImportValue": {
-            "Fn::Sub": "${NETWORK}-VPC"
-          }
-        },
-        "SecurityGroupIngress": [
-          {
-            "IpProtocol": "tcp",
-            "FromPort": 8080,
-            "ToPort": 8080,
-            "SourceSecurityGroupId": {
-              "Ref": "loadBalancerSecurityGroup"
-            }
           }
         ]
       }
@@ -283,15 +440,35 @@
         }
       }
     },
-    "asg_launch_config": {
-      "Type": "AWS::AutoScaling::LaunchConfiguration",
+    "EC2Instance": {
+      "Type": "AWS::EC2::Instance",
       "Properties": {
-        "AssociatePublicIpAddress": "True",
         "ImageId": {
           "Ref": "AMIID"
         },
-        "KeyName": "centos",
+        "Tags": [
+          {
+            "Key": "cloud-key",
+            "Value": "cloud-value"
+          }
+        ],
         "InstanceType": "t2.micro",
+        "KeyName": "centos",
+        "IamInstanceProfile": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${POLICY}-InstanceProfile"
+          }
+        },
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "VolumeType": "gp2",
+              "DeleteOnTermination": true,
+              "VolumeSize": "20"
+            }
+          }
+        ],
         "UserData": {
           "Fn::Base64": {
             "Fn::Join": [
@@ -309,7 +486,7 @@
                     [
                       "echo 'JAVA_OPTS=\"-DBUCKET_NAME=",
                       {
-                        "Ref": "S3BUCKET"
+                        "Ref": "IMAGES3BUCKET"
                       },
                       "\"' >> setenv.sh"
                     ]
@@ -339,52 +516,22 @@
             ]
           }
         },
-        "SecurityGroups": [
+        "NetworkInterfaces": [
           {
-            "Ref": "WebSecurityGroup"
+            "AssociatePublicIpAddress": true,
+            "DeviceIndex": "0",
+            "GroupSet": [
+              {
+                "Ref": "WebSecurityGroup"
+              }
+            ],
+            "SubnetId": {
+              "Fn::ImportValue": {
+                "Fn::Sub": "${NETWORK}-SubnetID3"
+              }
+            }
           }
         ]
-      }
-    },
-    "autoScalingGroup": {
-      "Type": "AWS::AutoScaling::AutoScalingGroup",
-      "Properties": {
-        "LaunchConfigurationName": {
-          "Ref": "asg_launch_config"
-        },
-        "Cooldown": "60",
-        "DesiredCapacity": "3",
-        "MinSize": "3",
-        "MaxSize": "7",
-        "Tags": [
-          {
-            "PropagateAtLaunch": true,
-            "Key": "Name",
-            "Value": "asg_launch_config"
-          }
-        ]
-      }
-    },
-    "WebServerScaleUpPolicy": {
-      "Type": "AWS::AutoScaling::ScalingPolicy",
-      "Properties": {
-        "AdjustmentType": "ChangeInCapacity",
-        "AutoScalingGroupName": {
-          "Ref": "autoScalingGroup"
-        },
-        "Cooldown": "60",
-        "ScalingAdjustment": "1"
-      }
-    },
-    "WebServerScaleDownPolicy": {
-      "Type": "AWS::AutoScaling::ScalingPolicy",
-      "Properties": {
-        "AdjustmentType": "ChangeInCapacity",
-        "AutoScalingGroupName": {
-          "Ref": "autoScalingGroup"
-        },
-        "Cooldown": "60",
-        "ScalingAdjustment": "-1"
       }
     },
     "CPUAlarmHigh": {
@@ -438,136 +585,8 @@
         ],
         "ComparisonOperator": "LessThanThreshold"
       }
-    },
-    "elasticAppLoadBalancer": {
-      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
-      "Properties": {
-        "Name": "appLoadbalancer",
-        "SecurityGroups": [
-          {
-            "Ref": "loadBalancerSecurityGroup"
-          }
-        ],
-        "Type": "application",
-        "IpAddressType": "ipv4",
-        "Subnets": [
-          {
-            "Ref": "SUBNET1"
-          },
-          {
-            "Ref": "SUBNET2"
-          },
-          {
-            "Ref": "SUBNET3"
-          }
-        ],
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "Application Load Balancer"
-          }
-        ]
-      }
-    },
-    "Listener": {
-      "Type": "AWS::ElasticLoadBalancingV2::Listener",
-      "Properties": {
-        "Certificates": [
-          {
-            "CertificateArn": {
-              "Ref": "CERTIFICATE"
-            }
-          }
-        ],
-        "DefaultActions": [
-          {
-            "Type": "forward",
-            "TargetGroupArn": {
-              "Ref": "loadBalancerTargetGroup"
-            }
-          }
-        ],
-        "LoadBalancerArn": {
-          "Ref": "elasticAppLoadBalancer"
-        },
-        "Port": "443",
-        "Protocol": "HTTPS"
-      }
-    },
-    "httpListener": {
-      "Type": "AWS::ElasticLoadBalancingV2::Listener",
-      "Properties": {
-        "DefaultActions": [
-          {
-            "Type": "redirect",
-            "RedirectConfig": {
-              "Protocol": "HTTPS",
-              "StatusCode": "HTTP_301",
-              "Port": 443
-            }
-          }
-        ],
-        "LoadBalancerArn": {
-          "Ref": "elasticAppLoadBalancer"
-        },
-        "Port": "80",
-        "Protocol": "HTTP"
-      }
-    },
-    "loadBalancingTargetGroup": {
-      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
-      "Properties": {
-        "Name": "LibMngTargetGroup",
-        "TargetType": "instance",
-        "HealthCheckIntervalSeconds": 30,
-        "HealthCheckPort": 8080,
-        "UnhealthyThresholdCount": 10,
-        "HealthCheckPath": "/",
-        "Protocol": "HTTP",
-        "Port": 8080,
-        "VpcId" : {"Ref" : "myVpc"},
-        "TargetGroupAttributes": [
-          {
-            "Key": "deregistration_delay.timeout_seconds",
-            "Value": "20"
-          }
-        ],
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "asg_launch_config"
-          }
-        ]
-      }
-    },
-    "myDomain": {
-      "Type": "AWS::Route53::RecordSet",
-      "Properties": {
-        "AliasTarget": {
-          "DNSName": {
-            "Fn::GetAtt": [
-              "elasticAppLoadBalancer",
-              "DNSName"
-            ]
-          },
-          "EvaluateTargetHealth": "true",
-          "HostedZoneId": {
-            "Fn::GetAtt": [
-              "elasticAppLoadBalancer",
-              "CanonicalHostedZoneID"
-            ]
-          }
-        },
-        "Comment": "Domain for my instance",
-        "HostedZoneName": {
-          "Ref": "DNSDOMAIN"
-        },
-        "Name": {
-          "Ref": "DNSDOMAIN"
-        },
-        "Type": "A"
-      }
     }
+
   }
 }
 
