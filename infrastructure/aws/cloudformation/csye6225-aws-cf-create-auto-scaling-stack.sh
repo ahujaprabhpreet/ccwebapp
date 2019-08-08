@@ -13,6 +13,16 @@ if [[ $? -eq 0 ]]; then
         echo "Auto Scaling stack name : ${AUTO_SCALING_STACK_NAME}"
     fi
 
+    echo -n "Enter policy stack name: "
+    read POLICY_NAME
+
+    if [[ ${POLICY_NAME} == "" ]]; then
+        echo "Please enter Policy stack name!"
+        exit 1
+    else
+        echo "Policy stack name : ${POLICY_NAME}"
+    fi
+
     echo -n "Enter Network stack name: "
     read NETWORK_STACK
 
@@ -51,16 +61,6 @@ if [[ $? -eq 0 ]]; then
         exit 1
     else
         echo "Subnet3 name : ${SUBNET3}"
-    fi
-
-    echo -n "Enter policy stack name: "
-    read POLICY_NAME
-
-    if [[ ${POLICY_NAME} == "" ]]; then
-        echo "Please enter Policy stack name!"
-        exit 1
-    else
-        echo "Policy stack name : ${POLICY_NAME}"
     fi
 
     # reading AMI ID from the user
