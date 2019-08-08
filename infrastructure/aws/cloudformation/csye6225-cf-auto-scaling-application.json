@@ -58,7 +58,7 @@
                   {
                     "Ref": "AWS::StackName"
                   },
-                  "-csye6225-load-balancer-security"
+                  "-csye6225-launch-config"
                 ]
               ]
             }
@@ -90,7 +90,7 @@
     "loadBalancerTargetGroup": {
       "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
       "Properties": {
-        "Name": "Load Balancer Target Group",
+        "Name": "LoadBalancerTargetGroup",
         "TargetType": "instance",
         "HealthCheckIntervalSeconds": 30,
         "HealthCheckPort": 8080,
@@ -108,7 +108,7 @@
         "Tags": [
           {
             "Key": "Name",
-            "Value": "loadBalancer"
+            "Value": "asg_launch_config"
           }
         ]
       }
@@ -138,7 +138,7 @@
         "Tags": [
           {
             "Key": "Name",
-            "Value": "loadBalancer"
+            "Value": "asg_launch_config"
           }
         ]
       }
@@ -320,7 +320,7 @@
           {
             "PropagateAtLaunch": true,
             "Key": "Name",
-            "Value": "asgLaunchConfig"
+            "Value": "asg_launch_config"
           }
         ]
       },
@@ -835,8 +835,8 @@
         },
         "Ec2TagFilters" : [
           {
-            "Key": "cloud-key",
-            "Value": "cloud-value",
+            "Key": "Name",
+            "Value": "asg_launch_config",
             "Type": "KEY_AND_VALUE"
           }
         ],
@@ -865,6 +865,13 @@
           ]
         }
       }
+    }
+  },
+  "Outputs" : {
+    "Dynamodb" : {
+      "Description" : "Dynamodb to be attached with lambda function",
+      "Value" :  { "Ref" : "DynamoDB" },
+      "Export" : { "Name" : "csye6225-dynamodb" }
     }
   }
 }
