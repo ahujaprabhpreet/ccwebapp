@@ -58,7 +58,7 @@
                   {
                     "Ref": "AWS::StackName"
                   },
-                  "-csye6225-load-balancer-security"
+                  "-csye6225-launch-config"
                 ]
               ]
             }
@@ -835,7 +835,7 @@
         },
         "Ec2TagFilters" : [
           {
-            "Key": "cloud-key",
+            "Key": "Name",
             "Value": "asg_launch_config",
             "Type": "KEY_AND_VALUE"
           }
