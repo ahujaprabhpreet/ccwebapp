@@ -74,6 +74,16 @@ if [[ $? -eq 0 ]]; then
         echo "AMI ID : ${AMI_ID}"
     fi
 
+    echo -n "Enter Code Deploy Bucket name: "
+    read CODEDEPLOYS3BUCKET
+
+    if [[ ${CODEDEPLOYS3BUCKET} == "" ]]; then
+        echo "Please enter Enter Code Deploy Bucket name!"
+        exit 1
+    else
+        echo "Code Deploy Bucket name : ${CODEDEPLOYS3BUCKET}"
+    fi
+
     echo -n "Enter image S3 bucket name: "
     read S3_IMAGE_BUCKET
 
@@ -104,7 +114,6 @@ if [[ $? -eq 0 ]]; then
         echo "DNS Domain name : ${DNSDOMAIN}"
     fi
 
-
     # create application resources stack
     aws cloudformation create-stack \
         --stack-name ${AUTO_SCALING_STACK_NAME} \
@@ -112,6 +121,7 @@ if [[ $? -eq 0 ]]; then
         --parameters ParameterKey=AMIID,ParameterValue=${AMI_ID} \
         ParameterKey=NETWORK,ParameterValue=${NETWORK_STACK} \
         ParameterKey=POLICY,ParameterValue=${POLICY_NAME} \
+        ParameterKey=CODEDEPLOYS3BUCKET,ParameterValue=${CODEDEPLOYS3BUCKET} \
         ParameterKey=IMAGES3BUCKET,ParameterValue=${S3_IMAGE_BUCKET} \
         ParameterKey=SUBNET1,ParameterValue=${SUBNET1} \
         ParameterKey=SUBNET2,ParameterValue=${SUBNET2} \

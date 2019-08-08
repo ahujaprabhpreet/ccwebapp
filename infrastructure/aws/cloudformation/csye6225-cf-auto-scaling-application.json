@@ -98,7 +98,7 @@
         "HealthCheckPath": "/",
         "Protocol": "HTTP",
         "Port": 8080,
-        "VpcId" : {"Ref" : "myVpc"},
+        "VpcId" : {"Ref" : "NETWORK"},
         "TargetGroupAttributes": [
           {
             "Key": "deregistration_delay.timeout_seconds",
@@ -108,7 +108,7 @@
         "Tags": [
           {
             "Key": "Name",
-            "Value": "load_balancer"
+            "Value": "loadBalancer"
           }
         ]
       }
@@ -138,7 +138,7 @@
         "Tags": [
           {
             "Key": "Name",
-            "Value": "load_balancer"
+            "Value": "loadBalancer"
           }
         ]
       }
@@ -216,7 +216,7 @@
         "Type": "A"
       }
     },
-    "asg_launch_config": {
+    "asgLaunchConfig": {
       "Type": "AWS::AutoScaling::LaunchConfiguration",
       "Properties": {
         "AssociatePublicIpAddress": "True",
@@ -296,7 +296,7 @@
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "Properties": {
         "LaunchConfigurationName": {
-          "Ref": "asg_launch_config"
+          "Ref": "asgLaunchConfig"
         },
         "Cooldown": "60",
         "DesiredCapacity": "3",
@@ -320,7 +320,7 @@
           {
             "PropagateAtLaunch": true,
             "Key": "Name",
-            "Value": "asg_launch_config"
+            "Value": "asgLaunchConfig"
           }
         ]
       },
