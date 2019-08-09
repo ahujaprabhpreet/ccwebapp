@@ -38,7 +38,9 @@
       "Properties": {
         "GroupDescription": "Allow http traffic to webserver",
         "VpcId": {
-          "Ref": "NETWORK"
+          "Fn::ImportValue": {
+          "Fn::Sub": "${NETWORK}-VPC"
+        }
         },
         "SecurityGroupIngress": [
           {
@@ -98,7 +100,11 @@
         "HealthCheckPath": "/",
         "Protocol": "HTTP",
         "Port": 8080,
-        "VpcId" : {"Ref" : "NETWORK"},
+        "VpcId": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${NETWORK}-VPC"
+          }
+        },
         "TargetGroupAttributes": [
           {
             "Key": "deregistration_delay.timeout_seconds",
@@ -116,7 +122,7 @@
     "elasticAppLoadBalancer": {
       "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
       "Properties": {
-        "Name": "Elastic App Load Balancer",
+        "Name": "ElasticAppLoadBalancer",
         "SecurityGroups": [
           {
             "Ref": "loadBalancerSecurityGroup"
@@ -126,13 +132,19 @@
         "IpAddressType": "ipv4",
         "Subnets": [
           {
-            "Ref": "SUBNET1"
+            "Fn::ImportValue": {
+              "Fn::Sub": "${NETWORK}-SubnetID1"
+            }
           },
           {
-            "Ref": "SUBNET2"
+            "Fn::ImportValue": {
+              "Fn::Sub": "${NETWORK}-SubnetID2"
+            }
           },
           {
-            "Ref": "SUBNET3"
+            "Fn::ImportValue": {
+              "Fn::Sub": "${NETWORK}-SubnetID3"
+            }
           }
         ],
         "Tags": [
@@ -307,13 +319,19 @@
         ],
         "VPCZoneIdentifier": [
           {
-            "Ref": "SUBNET1"
+            "Fn::ImportValue": {
+              "Fn::Sub": "${NETWORK}-SubnetID1"
+            }
           },
           {
-            "Ref": "SUBNET2"
+            "Fn::ImportValue": {
+              "Fn::Sub": "${NETWORK}-SubnetID2"
+            }
           },
           {
-            "Ref": "SUBNET3"
+            "Fn::ImportValue": {
+              "Fn::Sub": "${NETWORK}-SubnetID3"
+            }
           }
         ],
         "Tags": [
@@ -872,6 +890,11 @@
       "Description" : "Dynamodb to be attached with lambda function",
       "Value" :  { "Ref" : "DynamoDB" },
       "Export" : { "Name" : "csye6225-dynamodb" }
+    },
+    "ElasticLoadBalancer": {
+      "Description": "Elastic Application Load Balancer",
+      "Value": { "Ref":  "elasticAppLoadBalancer" },
+      "Export": { "Name": "AutoScaling-ELB" }
     }
   }
 }
