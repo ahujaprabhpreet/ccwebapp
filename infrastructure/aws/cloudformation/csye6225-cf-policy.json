@@ -344,18 +344,6 @@
             "Type": "KEY_AND_VALUE"
           }
         ],
-        "AutoScalingGroups": [
-          {
-            "Ref": "autoScalingGroup"
-          }
-        ],
-        "LoadBalancerInfo": {
-          "ElbInfoList": [
-            {
-              "Name": "appLoadbalancer"
-            }
-          ]
-        },
         "DeploymentConfigName": "CodeDeployDefault.AllAtOnce",
         "DeploymentGroupName": "csye6225-webapp-deployment",
         "DeploymentStyle": {
