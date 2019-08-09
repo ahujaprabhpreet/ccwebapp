@@ -33,36 +33,6 @@ if [[ $? -eq 0 ]]; then
 #        echo "Network stack name : ${NETWORK_STACK}"
 #    fi
 #
-#    echo -n "Enter subnet1 name: "
-#    read SUBNET1
-#
-#    if [[ ${SUBNET1} == "" ]]; then
-#        echo "Please enter Subnet1 name!"
-#        exit 1
-#    else
-#        echo "Subnet1 name : ${SUBNET1}"
-#    fi
-#
-#    echo -n "Enter subnet2 name: "
-#    read SUBNET2
-#
-#    if [[ ${SUBNET2} == "" ]]; then
-#        echo "Please enter Subnet2 name!"
-#        exit 1
-#    else
-#        echo "Subnet2 name : ${SUBNET2}"
-#    fi
-#
-#    echo -n "Enter subnet3 name: "
-#    read SUBNET3
-#
-#    if [[ ${SUBNET3} == "" ]]; then
-#        echo "Please enter Subnet3 name!"
-#        exit 1
-#    else
-#        echo "Subnet3 name : ${SUBNET3}"
-#    fi
-#
 #    # reading AMI ID from the user
 #    echo -n "Enter AMI-ID: "
 #    read AMI_ID
@@ -120,9 +90,6 @@ if [[ $? -eq 0 ]]; then
     POLICY_NAME="Policy"
     CODEDEPLOYS3BUCKET="code-deploy.csye6225-su19-ladn.me"
     S3_IMAGE_BUCKET="csye6225-su19-ladn.me.csye6225.com"
-    SUBNET1="Shubham"
-    SUBNET2="Mansi"
-    SUBNET3="Nikunj"
     CERTIFICATE="arn:aws:acm:us-east-1:325281477233:certificate/96141c4c-75fe-45c3-8e80-46230372c906"
     DNSDOMAIN="csye6225-su19-ladn.me."
 
@@ -135,9 +102,6 @@ if [[ $? -eq 0 ]]; then
         ParameterKey=POLICY,ParameterValue=${POLICY_NAME} \
         ParameterKey=CODEDEPLOYS3BUCKET,ParameterValue=${CODEDEPLOYS3BUCKET} \
         ParameterKey=IMAGES3BUCKET,ParameterValue=${S3_IMAGE_BUCKET} \
-        ParameterKey=SUBNET1,ParameterValue=${SUBNET1} \
-        ParameterKey=SUBNET2,ParameterValue=${SUBNET2} \
-        ParameterKey=SUBNET3,ParameterValue=${SUBNET3} \
         ParameterKey=CERTIFICATE,ParameterValue=${CERTIFICATE} \
         ParameterKey=DNSDOMAIN,ParameterValue=${DNSDOMAIN} \
         --capabilities CAPABILITY_NAMED_IAM

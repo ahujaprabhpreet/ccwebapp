@@ -18,15 +18,6 @@
     "DNSDOMAIN": {
       "Type": "String"
     },
-    "SUBNET1": {
-      "Type": "String"
-    },
-    "SUBNET2": {
-      "Type": "String"
-    },
-    "SUBNET3": {
-      "Type": "String"
-    },
     "CODEDEPLOYS3BUCKET": {
       "Type": "String"
     }
