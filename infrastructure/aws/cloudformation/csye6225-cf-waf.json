@@ -5,7 +5,6 @@
   "Resources": {
     "sqlInjectionSet": {
       "Type": "AWS::WAFRegional::SqlInjectionMatchSet",
-
       "Properties": {
         "Name": "RegionalSqlInjectionMatchSet",
         "SqlInjectionMatchTuples": [
@@ -64,7 +63,6 @@
     },
     "sqlInjectionRule": {
       "Type": "AWS::WAFRegional::Rule",
-
       "Properties": {
         "MetricName": "SqlInjectionRule",
         "Name": "SqlInjectionRule",
@@ -464,6 +462,29 @@
         ]
       }
     },
+    "WAFAutoBlockSet": {
+      "Type": "AWS::WAFRegional::IPSet",
+      "Properties": {
+        "Name": "AutoBlockSet"
+      }
+    },
+    "MyAutoBlockRule": {
+      "Type": "AWS::WAFRegional::Rule",
+      "DependsOn": "WAFAutoBlockSet",
+      "Properties": {
+        "Name": "Auto Block Rule",
+        "MetricName": "AutoBlockRule",
+        "Predicates": [
+          {
+            "DataId": {
+              "Ref": "WAFAutoBlockSet"
+            },
+            "Negated": false,
+            "Type": "IPMatch"
+          }
+        ]
+      }
+    },
     "MyIPSetWhiteListRule": {
       "Type": "AWS::WAFRegional::Rule",
       "Properties": {
@@ -540,24 +561,20 @@
     },
     "MyWebACL": {
       "Type": "AWS::WAFRegional::WebACL",
-
       "Properties": {
-
         "Name": "My Web ACL",
         "DefaultAction": {
           "Type": "ALLOW"
         },
         "MetricName": "WebACL",
         "Rules": [
-
           {
             "Action": {
               "Type": "BLOCK"
             },
             "Priority": 1,
-            "RuleId": {"Ref":"sqlinjectionRule"}
+            "RuleId": {"Ref":"sqlInjectionRule"}
           },
-
           {
             "Action": {
               "Type": "BLOCK"
@@ -565,7 +582,6 @@
             "Priority": 2,
             "RuleId": {"Ref":"AuthTokenRule"}
           },
-
           {
             "Action": {
               "Type": "BLOCK"
@@ -598,42 +614,25 @@
             "Action": {
               "Type": "BLOCK"
             },
-            "Priority": 1,
-            "RuleId": {"Ref":"sqlinjectionRule"}
-          },
-          {
-            "Action": {
-              "Type": "BLOCK"
-            },
-            "Priority": 1,
-            "RuleId": {"Ref":"sqlinjectionRule"}
-          },
-          {
-            "Action": {
-              "Type": "BLOCK"
-            },
-            "Priority": 1,
-            "RuleId": {"Ref":"sqlinjectionRule"}
-          },
-          {
-            "Action": {
-              "Type": "BLOCK"
-            },
-            "Priority": 10,
+            "Priority": 7,
             "RuleId": {"Ref":"MyIPSetWhiteListRule"}
           }
         ]
       }
     },
     "MyWebACLAssociation": {
-
       "Type": "AWS::WAFRegional::WebACLAssociation",
-      "DependsOn":["elasticAppLoadBalancer","MyWebACL"],
+      "DependsOn":[
+        "MyWebACL"
+      ],
       "Properties": {
-        "ResourceArn": { "Ref": "elasticAppLoadBalancer" },
-        "WebACLId": { "Ref": "MyWebACL" }
+        "ResourceArn": {
+          "Fn::ImportValue": "AutoScaling-ELB"
+        },
+        "WebACLId": {
+          "Ref": "MyWebACL"
+        }
       }
     }
   }
-
 }
