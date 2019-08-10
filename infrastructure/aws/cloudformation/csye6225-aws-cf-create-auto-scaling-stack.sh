@@ -43,8 +43,8 @@ if [[ $? -eq 0 ]]; then
         echo "DNS Domain name : ${DNSDOMAIN}"
     fi
 
-    AWSID=$(aws iam get-user | jq '.["User"]["UserId"]')
-    AMI_ID=$(aws ec2 describe-images --owners ${AWSID} --query 'Images[*].{ID:ImageId}' | jq '.[]."ID"')
+#    AWSID=$(aws iam get-user | jq '.["User"]["UserId"]')
+    AMI_ID=$(aws ec2 describe-images --filters "Name=tag:Name,Values=csye6225-Cloud" --query 'Images[0].{ID:ImageId}' --output text)
     CODEDEPLOYS3BUCKET=$(aws s3api list-buckets --query "Buckets[].Name" | jq '.[]' | grep 'code-deploy')
     S3_IMAGE_BUCKET=$(aws s3api list-buckets --query "Buckets[].Name" | jq '.[]' | grep '.com')
     CERTIFICATE=$(aws acm list-certificates | jq '.["CertificateSummaryList"][0]["CertificateArn"]')
