@@ -14,7 +14,7 @@ then
         echo "Please enter an Web Application Firewall (WAF) stack name!"
         exit 1
     else
-        echo "Auto Scaling stack name : ${WAF_STACK_NAME}"
+        echo "Web Application Firewall (WAF) stack name : ${WAF_STACK_NAME}"
     fi
 
     aws cloudformation create-stack --stack-name ${WAF_STACK_NAME} \
@@ -23,7 +23,7 @@ then
 
      # check if the stack creation was successful
     if [[ $? -ne 0 ]]; then
-        echo "Web Application Firewall (WAF)  Stack creation not completed"
+        echo "Web Application Firewall (WAF) Stack creation not completed"
         exit 1
     fi
     echo "Web Application Firewall (WAF) Stack creation in progress..."
