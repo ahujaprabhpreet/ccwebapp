@@ -18,16 +18,6 @@ then
         echo "Lambda Stack name : ${LAMBDA_STACK_NAME}"
     fi
 
-    echo -n "Enter S3 Code Deploy bucket name: "
-    read CODE_DEPLOY_BUCKET
-
-    if [[ ${CODE_DEPLOY_BUCKET} == "" ]]; then
-        echo "Please enter Code Deploy Bucket name!"
-        exit 1
-    else
-        echo "Code Deploy name : ${CODE_DEPLOY_BUCKET}"
-    fi
-
     echo -n "Enter Domain name: "
     read DOMAIN_NAME
 
@@ -37,6 +27,8 @@ then
     else
         echo "Domain name : ${DOMAIN_NAME}"
     fi
+
+    CODE_DEPLOY_BUCKET=$(aws s3api list-buckets --query "Buckets[].Name" | jq '.[]' | grep 'code-deploy')
 
     aws cloudformation create-stack --stack-name ${LAMBDA_STACK_NAME} --template-body file://csye6225-cf-lambda.json --parameters ParameterKey=S3Bucket,ParameterValue=${CODE_DEPLOY_BUCKET} ParameterKey=DomainName,ParameterValue=${DOMAIN_NAME} --capabilities CAPABILITY_NAMED_IAM
      # check if the
